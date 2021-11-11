@@ -9,7 +9,7 @@
 
 
 START   ORG    $4000                  ; first instruction of program
-
+            MOVE.B  #$,D3   
             MOVE.B  #8,D3   
                         LEA          MESSAGE1,A1  
                 MOVE.B  #14,D0  
@@ -142,6 +142,7 @@ Exponent       DS.W      1
 Mantissa       DS.W      1
 
     END    START        ; last line of source
+
 
 *~Font name~Courier New~
 *~Font size~10~
