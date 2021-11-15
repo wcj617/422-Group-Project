@@ -1,0 +1,133 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 11/15/2021 1:52:43 AM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :Group Project    
+00000000                             3  * Written by :David Woo 
+00000000                             4  * Date       :11/7/2021 
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00000000                             7  *   Main program
+00000000                             8  *--------------------------------------------------------------------
+00000000                             9  
+00000000                            10  
+00000000                            11  *--------------------------------------------------------------------
+00000000                            12  * User Input for staring address
+00000000                            13  *--------------------------------------------------------------------
+00000000                            14  
+00001000                            15  START   ORG     $1000
+00001000  183C 0002                 16          MOVE.B  #2,D4                  *for Starting and Ending address                      ; first instruction of program
+00001004  43F9 000010CA             17          LEA     GREETING_MSG,A1
+0000100A  103C 000E                 18          MOVE.B  #14,D0
+0000100E  4E4F                      19          TRAP    #15 
+00001010                            20          
+00001010                            21          
+00001010                            22          
+00001010  163C 0008                 23  InputS  MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
+00001014  43F9 000011E7             24          LEA        MessageSt,A1
+0000101A  103C 000E                 25          MOVE.B     #14,D0
+0000101E  4E4F                      26          TRAP       #15  
+00001020  103C 0002                 27          MOVE.B     #2,D0                     Trap task 2 does the following:
+00001024  4E4F                      28          TRAP       #15             *Read string from keyboard and store at (A1), NULL terminated, length retuned in D1.W (max 80)
+00001026  4EF9 0000104C             29          JMP        AtoH
+0000102C                            30          
+0000102C  4285                      31  InputE  CLR.L      D5
+0000102E  4286                      32          CLR.L      D6      
+00001030  163C 0008                 33          MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
+00001034  43F9 00001204             34          LEA        MessageEn,A1
+0000103A  103C 000E                 35          MOVE.B     #14,D0
+0000103E  4E4F                      36          TRAP       #15  
+00001040  103C 0002                 37          MOVE.B     #2,D0                     Trap task 2 does the following:
+00001044  4E4F                      38          TRAP       #15             *Read string from keyboard and store at (A1), NULL terminated, length retuned in D1.W (max 80)
+00001046  4EF9 0000104C             39          JMP        AtoH
+0000104C                            40          
+0000104C  1C19                      41  AtoH    MOVE.B      (A1)+,D6        * move user input data from (A1) to D6          
+0000104E  0C06 0030                 42          CMPI.B      #$30,D6
+00001052  6D10                      43          BLT.B       ERR 
+00001054  BC3C 0039                 44          CMP.B       #$39,D6 
+00001058  6E18                      45          BGT.B       ALPHA    
+0000105A  0406 0030                 46          SUBI.B      #$30,D6
+0000105E  6000 0028                 47          BRA         AddressCounting       
+00001062  4E75                      48          RTS     
+00001064                            49  
+00001064  43F9 0000121F             50  ERR     LEA         ERRM,A1
+0000106A  103C 000E                 51          MOVE.B      #14,D0  
+0000106E  4E4F                      52          TRAP        #15    
+00001070  609E                      53          BRA         InputS   
+00001072                            54          
+00001072  0C06 0041                 55  ALPHA   CMPI.B      #$41,D6 
+00001076  6DEC                      56          BLT.B       ERR
+00001078  0C06 0046                 57          CMPI.B      #$46,D6 
+0000107C  6EE6                      58          BGT.B       ERR 
+0000107E  0406 0037                 59          SUBI.B      #$37,D6
+00001082  6000 0004                 60          BRA         AddressCounting    
+00001086  4E75                      61          RTS
+00001088                            62          
+00001088  DA06                      63  AddressCounting   ADD.B   D6,D5 
+0000108A  5303                      64                  SUBI.B  #1,D3  
+0000108C  B63C 0000                 65                  CMP.B   #$0,D3    
+00001090  6700 000A                 66                  BEQ     StartingAd          
+00001094  E985                      67                  ASL.L   #$04,D5
+00001096  B63C 0000                 68                  CMP.B   #$0,D3
+0000109A  66B0                      69                  BNE     AtoH
+0000109C                            70  
+0000109C  5304                      71  StartingAd                SUBI.B     #1,D4
+0000109E  B83C 0000                 72                                  CMP.B     #$0,D4
+000010A2  6700 000C                 73                                  BEQ         EndingAd
+000010A6  23C5 000010C2             74                                  MOVE.L    D5,Addr1
+000010AC  4EF8 102C                 75                                  JMP         InputE
+000010B0                            76  
+000010B0  23C5 000010C6             77  EndingAd                 MOVE.L    D5,Addr2                            
+000010B6  2E39 000010C2             78                  MOVE.L  Addr1,D7    
+000010BC  2439 000010C6             79                  MOVE.L  Addr2,D2    
+000010C2                            80          
+000010C2                            81  *---------------------------------------------------------------------
+000010C2                            82  *Variable
+000010C2                            83  *---------------------------------------------------------------------
+000010C2                            84  Addr1       DS.L    1
+000010C6                            85  Addr2       DS.L    1   
+000010CA                            86  *---------------------------------------------------------------------
+000010CA                            87  *MESSAGE
+000010CA                            88  *---------------------------------------------------------------------
+000010CA  =0000000D                 89  CR      EQU     $0D             ASCII code for Carriage Return
+000010CA  =0000000A                 90  LF      EQU     $0A             ASCII code for Line Feed
+000010CA                            91  
+000010CA= 57 65 6C 63 6F 6D ...     92  GREETING_MSG    DC.B    'Welcome to A Disassembler for the Motorola MC68000 Microprocessor',CR,LF
+0000110D= 54 79 70 65 20 79 ...     93                  DC.B    'Type your address that must be 8 hexdecimal characters',CR,LF
+00001145= 54 68 65 20 53 74 ...     94                  DC.B    'The Starting address must be greater than $00001000.',CR,LF
+0000117B= 54 68 65 20 65 6E ...     95                  DC.B    'The ending address must be greater than the starting address.',CR,LF 
+000011BA= 54 68 65 20 61 64 ...     96                  DC.B    'The address should be even number address!',CR,LF,0
+000011E7                            97  
+000011E7= 45 6E 74 65 72 20 ...     98  MessageSt               DC.B         'Enter the starting address',CR,LF,0    
+00001204                            99  
+00001204= 45 6E 74 65 72 20 ...    100  MessageEn               DC.B         'Enter the Ending address',CR,LF,0 
+0000121F                           101  
+0000121F= 45 6E 74 65 72 20 ...    102  ERRM         DC.B     'Enter Valid hexadecimal value: ', 0
+0000123F                           103  *---------------------------------------------------------------------          
+0000123F                           104      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+ADDR1               10C2
+ADDR2               10C6
+ADDRESSCOUNTING     1088
+ALPHA               1072
+ATOH                104C
+CR                  D
+ENDINGAD            10B0
+ERR                 1064
+ERRM                121F
+GREETING_MSG        10CA
+INPUTE              102C
+INPUTS              1010
+LF                  A
+MESSAGEEN           1204
+MESSAGEST           11E7
+START               1000
+STARTINGAD          109C

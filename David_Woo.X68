@@ -12,7 +12,8 @@
 * User Input for staring address
 *--------------------------------------------------------------------
 
-START   ORG     $1000                      ; first instruction of program
+START   ORG     $1000
+        MOVE.B  #2,D4                  *for Starting and Ending address                      ; first instruction of program
         LEA     GREETING_MSG,A1
         MOVE.B  #14,D0
         TRAP    #15 
@@ -27,7 +28,9 @@ InputS  MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
         TRAP       #15             *Read string from keyboard and store at (A1), NULL terminated, length retuned in D1.W (max 80)
         JMP        AtoH
         
-InputE  MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
+InputE  CLR.L      D5
+        CLR.L      D6      
+        MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
         LEA        MessageEn,A1
         MOVE.B     #14,D0
         TRAP       #15  
@@ -35,8 +38,7 @@ InputE  MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
         TRAP       #15             *Read string from keyboard and store at (A1), NULL terminated, length retuned in D1.W (max 80)
         JMP        AtoH
         
-AtoH    MOVE.B     (A1)+,D6        * move user input data from (A1) to D6          
-
+AtoH    MOVE.B      (A1)+,D6        * move user input data from (A1) to D6          
         CMPI.B      #$30,D6
         BLT.B       ERR 
         CMP.B       #$39,D6 
@@ -48,7 +50,7 @@ AtoH    MOVE.B     (A1)+,D6        * move user input data from (A1) to D6
 ERR     LEA         ERRM,A1
         MOVE.B      #14,D0  
         TRAP        #15    
-        BRA         Input   
+        BRA         InputS   
         
 ALPHA   CMPI.B      #$41,D6 
         BLT.B       ERR
@@ -62,15 +64,19 @@ AddressCounting   ADD.B   D6,D5
                 SUBI.B  #1,D3  
                 CMP.B   #$0,D3    
                 BEQ     StartingAd          
-                ASL.B   #$04,D5
+                ASL.L   #$04,D5
                 CMP.B   #$0,D3
                 BNE     AtoH
 
-StartingAd                MOVE.L    D5,Addr1
+StartingAd                SUBI.B     #1,D4
+                                CMP.B     #$0,D4
+                                BEQ         EndingAd
+                                MOVE.L    D5,Addr1
                                 JMP         InputE
 
 EndingAd                 MOVE.L    D5,Addr2                            
-
+                MOVE.L  Addr1,D7    
+                MOVE.L  Addr2,D2    
         
 *---------------------------------------------------------------------
 *Variable
@@ -83,15 +89,15 @@ Addr2       DS.L    1
 CR      EQU     $0D             ASCII code for Carriage Return
 LF      EQU     $0A             ASCII code for Line Feed
 
-MESSAGE1    DC.B    'Welcome to A Disassembler for the Motorola MC68000 Microprocessor',CR,LF
-            DC.B    'Type your address that must be 8 hexdecimal characters',CR,LF
-            DC.B    'The Starting address must be greater than $00001000.',CR,LF
-            DC.B    'The ending address must be greater than the starting address.',CR,LF 
-            DC.B    'The address should be even number address!',CR,LF,0
+GREETING_MSG    DC.B    'Welcome to A Disassembler for the Motorola MC68000 Microprocessor',CR,LF
+                DC.B    'Type your address that must be 8 hexdecimal characters',CR,LF
+                DC.B    'The Starting address must be greater than $00001000.',CR,LF
+                DC.B    'The ending address must be greater than the starting address.',CR,LF 
+                DC.B    'The address should be even number address!',CR,LF,0
 
-MessageSt      DC.B         'Enter the starting address',CR,LF,0    
+MessageSt               DC.B         'Enter the starting address:',CR,LF,0    
 
-MessageEn     DC.B          'Enter the Ending address',CR,LR,0
+MessageEn               DC.B         'Enter the Ending address:',CR,LF,0 
 
 ERRM         DC.B     'Enter Valid hexadecimal value: ', 0
 *---------------------------------------------------------------------          
