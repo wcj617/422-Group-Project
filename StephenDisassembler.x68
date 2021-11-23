@@ -1,14 +1,13 @@
 *-----------------------------------------------------------
-* Title      :
-* Written by :
-* Date       :
-* Description:
+* Title      : RTS and JSR Tests
+* Written by : Stephen Swetonic
+* Date       : 11/17/21
 *-----------------------------------------------------------
     ORG    $1000
 START:                  ; first instruction of program
 
 * RTS Test
-    CMP.W     $0000,#$4E75
+    CMPI.W     #$4E75,$0000
     
 * JSR Test
 * Test for JSR
@@ -35,8 +34,6 @@ IND MOVE.W    D0,D1
     
 * Test for direct memory address modes
 DIR ASR.W     #1,D0
-    BCS       LONG
-    BRA       WORD
         
 * Either add to the string or get direct address from memory
     
@@ -48,6 +45,7 @@ DIR ASR.W     #1,D0
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 *~Font name~Courier New~
 *~Font size~10~
