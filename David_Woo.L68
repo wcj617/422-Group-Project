@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 11/15/2021 1:52:43 AM
+Created On: 11/15/2021 5:25:14 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :Group Project    
@@ -35,7 +35,7 @@ Created On: 11/15/2021 1:52:43 AM
 0000102C  4285                      31  InputE  CLR.L      D5
 0000102E  4286                      32          CLR.L      D6      
 00001030  163C 0008                 33          MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
-00001034  43F9 00001204             34          LEA        MessageEn,A1
+00001034  43F9 00001205             34          LEA        MessageEn,A1
 0000103A  103C 000E                 35          MOVE.B     #14,D0
 0000103E  4E4F                      36          TRAP       #15  
 00001040  103C 0002                 37          MOVE.B     #2,D0                     Trap task 2 does the following:
@@ -51,7 +51,7 @@ Created On: 11/15/2021 1:52:43 AM
 0000105E  6000 0028                 47          BRA         AddressCounting       
 00001062  4E75                      48          RTS     
 00001064                            49  
-00001064  43F9 0000121F             50  ERR     LEA         ERRM,A1
+00001064  43F9 00001221             50  ERR     LEA         ERRM,A1
 0000106A  103C 000E                 51          MOVE.B      #14,D0  
 0000106E  4E4F                      52          TRAP        #15    
 00001070  609E                      53          BRA         InputS   
@@ -99,13 +99,13 @@ Created On: 11/15/2021 1:52:43 AM
 0000117B= 54 68 65 20 65 6E ...     95                  DC.B    'The ending address must be greater than the starting address.',CR,LF 
 000011BA= 54 68 65 20 61 64 ...     96                  DC.B    'The address should be even number address!',CR,LF,0
 000011E7                            97  
-000011E7= 45 6E 74 65 72 20 ...     98  MessageSt               DC.B         'Enter the starting address',CR,LF,0    
-00001204                            99  
-00001204= 45 6E 74 65 72 20 ...    100  MessageEn               DC.B         'Enter the Ending address',CR,LF,0 
-0000121F                           101  
-0000121F= 45 6E 74 65 72 20 ...    102  ERRM         DC.B     'Enter Valid hexadecimal value: ', 0
-0000123F                           103  *---------------------------------------------------------------------          
-0000123F                           104      END    START        ; last line of source
+000011E7= 45 6E 74 65 72 20 ...     98  MessageSt               DC.B         'Enter the starting address:',CR,LF,0    
+00001205                            99  
+00001205= 45 6E 74 65 72 20 ...    100  MessageEn               DC.B         'Enter the Ending address:',CR,LF,0 
+00001221                           101  
+00001221= 45 6E 74 65 72 20 ...    102  ERRM         DC.B     'Enter Valid hexadecimal value: ', 0
+00001241                           103  *---------------------------------------------------------------------          
+00001241                           104      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -122,12 +122,12 @@ ATOH                104C
 CR                  D
 ENDINGAD            10B0
 ERR                 1064
-ERRM                121F
+ERRM                1221
 GREETING_MSG        10CA
 INPUTE              102C
 INPUTS              1010
 LF                  A
-MESSAGEEN           1204
+MESSAGEEN           1205
 MESSAGEST           11E7
 START               1000
 STARTINGAD          109C
