@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 11/22/2021 9:20:51 PM
+Created On: 11/23/2021 11:51:37 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : RTS and JSR Tests
@@ -26,41 +26,38 @@ Created On: 11/22/2021 9:20:51 PM
 00001016  0A42 FFC7                 22      EOR.W     #%1111111111000111,D2
 0000101A  C441                      23      AND.W     D1,D2
 0000101C  B43C 0010                 24      CMP.B     #$10,D2
-00001020  6700 000A                 25      BEQ       IND
+00001020  6700 000C                 25      BEQ       IND
 00001024  B43C 0038                 26      CMP.B     #$38,D2
-00001028  6700 000C                 27      BEQ       DIR
-0000102C                            28      
-0000102C                            29  * Test for address reg number (stored in D2)
-0000102C  3200                      30  IND MOVE.W    D0,D1
-0000102E  3400                      31      MOVE.W    D0,D2
-00001030  0A42 FFF8                 32      EOR.W     #%1111111111111000,D2
-00001034  C441                      33      AND.W     D1,D2
-00001036                            34      
-00001036                            35  * Test for direct memory address modes
-00001036  E240                      36  DIR ASR.W     #1,D0
-Line 37 ERROR: Undefined symbol
-00001038  6500 ACDC                 37      BCS       LONG
-Line 38 ERROR: Undefined symbol
-0000103C  6000 ACD8                 38      BRA       WORD
-00001040                            39          
-00001040                            40  * Either add to the string or get direct address from memory
-00001040                            41      
-00001040                            42      
-00001040                            43      
-00001040                            44  
-00001040  FFFF FFFF                 45      SIMHALT             ; halt simulator
-00001044                            46  
-00001044                            47  * Put variables and constants here
-00001044                            48  
-00001044                            49      END    START        ; last line of source
+00001028  6700 000E                 27      BEQ       DIR
+0000102C  4E91                      28      JSR       (A1)
+0000102E                            29      
+0000102E                            30  * Test for address reg number (stored in D2)
+0000102E  3200                      31  IND MOVE.W    D0,D1
+00001030  3400                      32      MOVE.W    D0,D2
+00001032  0A42 FFF8                 33      EOR.W     #%1111111111111000,D2
+00001036  C441                      34      AND.W     D1,D2
+00001038                            35      
+00001038                            36  * Test for direct memory address modes
+00001038  E240                      37  DIR ASR.W     #1,D0
+0000103A                            38          
+0000103A                            39  * Either add to the string or get direct address from memory
+0000103A                            40      
+0000103A                            41      
+0000103A                            42      
+0000103A                            43  
+0000103A  FFFF FFFF                 44      SIMHALT             ; halt simulator
+0000103E                            45  
+0000103E                            46  * Put variables and constants here
+0000103E                            47  
+0000103E                            48      END    START        ; last line of source
 
-2 errors detected
+No errors detected
 No warnings generated
 
 
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-DIR                 1036
-IND                 102C
+DIR                 1038
+IND                 102E
 START               1000

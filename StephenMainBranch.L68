@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 11/23/2021 12:45:09 AM
+Created On: 11/24/2021 12:56:51 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :Group Project    
@@ -18,191 +18,256 @@ Created On: 11/23/2021 12:45:09 AM
 00000000                            14  
 00001000                            15  START   ORG     $1000
 00001000  183C 0002                 16          MOVE.B  #2,D4                  *for Starting and Ending address                      ; first instruction of program
-00001004  43F9 0000119A             17          LEA     GREETING_MSG,A1
+00001004  43F9 00001246             17          LEA     GREETING_MSG,A1
 0000100A  103C 000E                 18          MOVE.B  #14,D0
 0000100E  4E4F                      19          TRAP    #15 
 00001010                            20          
-00001010                            21          
-00001010                            22          
-00001010  163C 0008                 23  InputS  MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
-00001014  43F9 000012BA             24          LEA        MessageSt,A1
-0000101A  103C 000E                 25          MOVE.B     #14,D0
-0000101E  4E4F                      26          TRAP       #15
-00001020  103C 0002                 27          MOVE.B     #2,D0                     Trap task 2 does the following:
-00001024  4E4F                      28          TRAP       #15             *Read string from keyboard and store at (A1), NULL terminated, length retuned in D1.W (max 80)
-00001026  4EF9 0000104C             29          JMP        AtoH
-0000102C                            30          
-0000102C  4285                      31  InputE  CLR.L      D5
-0000102E  4286                      32          CLR.L      D6      
-00001030  163C 0008                 33          MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
-00001034  43F9 000012D8             34          LEA        MessageEn,A1
-0000103A  103C 000E                 35          MOVE.B     #14,D0
-0000103E  4E4F                      36          TRAP       #15  
-00001040  103C 0002                 37          MOVE.B     #2,D0                     Trap task 2 does the following:
-00001044  4E4F                      38          TRAP       #15             *Read string from keyboard and store at (A1), NULL terminated, length retuned in D1.W (max 80)
-00001046  4EF9 0000104C             39          JMP        AtoH
-0000104C                            40          
-0000104C  1C19                      41  AtoH    MOVE.B      (A1)+,D6        * move user input data from (A1) to D6          
-0000104E  0C06 0030                 42          CMPI.B      #$30,D6
-00001052  6D0E                      43          BLT.B       ERR 
-00001054  BC3C 0039                 44          CMP.B       #$39,D6 
-00001058  6E16                      45          BGT.B       ALPHA    
-0000105A  0406 0030                 46          SUBI.B      #$30,D6
-0000105E  6000 0026                 47          BRA         AddressCounting
-00001062                            48  
-00001062  43F9 000012F4             49  ERR     LEA         ERRM,A1
-00001068  103C 000E                 50          MOVE.B      #14,D0  
-0000106C  4E4F                      51          TRAP        #15    
-0000106E  60A0                      52          BRA         InputS   
-00001070                            53          
-00001070  0C06 0041                 54  ALPHA   CMPI.B      #$41,D6 
-00001074  6DEC                      55          BLT.B       ERR
-00001076  0C06 0046                 56          CMPI.B      #$46,D6 
-0000107A  6EE6                      57          BGT.B       ERR 
-0000107C  0406 0037                 58          SUBI.B      #$37,D6
-00001080  6000 0004                 59          BRA         AddressCounting    
-00001084  4E75                      60          RTS
-00001086                            61          
-00001086  DA06                      62  AddressCounting   ADD.B   D6,D5 
-00001088  5303                      63                    SUBI.B  #1,D3  
-0000108A  B63C 0000                 64                    CMP.B   #$0,D3    
-0000108E  6700 000A                 65                    BEQ     StartingAd          
-00001092  E985                      66                    ASL.L   #$04,D5
-00001094  B63C 0000                 67                    CMP.B   #$0,D3
-00001098  66B2                      68                    BNE     AtoH
-0000109A                            69  
-0000109A  5304                      70  StartingAd        SUBI.B  #1,D4
-0000109C  B83C 0000                 71                    CMP.B   #$0,D4
-000010A0  6700 000C                 72                    BEQ     EndingAd
-000010A4  23C5 00001192             73                    MOVE.L  D5,Addr1
-000010AA  4EF8 102C                 74                    JMP     InputE
-000010AE                            75  
-000010AE                            76  ** Addr1 now contains the ending address
-000010AE                            77  ** Addr2 now contains the starting address
-000010AE  23C5 00001196             78  EndingAd          MOVE.L  D5,Addr2                            
-000010B4  2C79 00001192             79                    MOVE.L  Addr1,A6
-000010BA                            80                    
-000010BA                            81  ** Use A6 for current address?
-000010BA                            82  CHECK_ENDING
-000010BA  2A79 00001196             83                    MOVE.L  Addr2,A5
-000010C0  BBCE                      84                    CMPA.L  A6,A5
-000010C2  6700 00A0                 85                    BEQ     ENDING
-000010C6  548E                      86                    ADD.L   #$2,A6
-000010C8  6000 0002                 87                    BRA     PRINT_CURRENT_ADR
-000010CC                            88                    
-000010CC                            89                    
-000010CC                            90  ** EXPECT: Clear registers, current address at A6
-000010CC                            91  PRINT_CURRENT_ADR
-000010CC  4EB9 00001164             92                    JSR     CLEAR_REGISTERS
-000010D2  240E                      93                    MOVE.L  A6,D2
-000010D4  1A3C 0000                 94                    MOVE.B  #0,D5
-000010D8  1C3C 0004                 95                    MOVE.B  #4,D6  * Loop 4 times
-000010DC                            96                    
-000010DC                            97  CHECK_LOOP
-000010DC  BC05                      98                    CMP.B   D5,D6
-000010DE  6600 0010                 99                    BNE     CONVERT_HEX_TO_ASCII
-000010E2  43F9 000012B7            100                    LEA     NEWLINE,A1
-000010E8  103C 000E                101                    MOVE.B  #14,D0
-000010EC  4E4F                     102                    TRAP    #15
-000010EE  60CA                     103                    BRA     CHECK_ENDING
-000010F0                           104                    
-000010F0                           105  CONVERT_HEX_TO_ASCII
-000010F0  2602                     106                    MOVE.L  D2,D3
-000010F2  0A83 00FFFFFF            107                    EOR.L   #%00000000111111111111111111111111,D3  
-000010F8  C682                     108                    AND.L   D2,D3
-000010FA  E08B                     109                    LSR.L   #8,D3
-000010FC  E08B                     110                    LSR.L   #8,D3
-000010FE  E08B                     111                    LSR.L   #8,D3      * D3 has leftmost byte
-00001100  1803                     112                    MOVE.B  D3,D4 
-00001102  0A04 000F                113                    EOR.B   #%00001111,D4
-00001106  C803                     114                    AND.B   D3,D4   
-00001108  E80C                     115                    LSR.B   #4,D4       * D4 has left 4 bits
-0000110A  4EB9 00001124            116                    JSR     CHECK_CHAR
-00001110  1803                     117                    MOVE.B  D3,D4
-00001112  0A04 00F0                118                    EOR.B   #%11110000,D4
-00001116  C803                     119                    AND.B   D3,D4      * D4 has right 4 bits
-00001118  4EB9 00001124            120                    JSR     CHECK_CHAR
-0000111E  E182                     121                    ASL.L   #8,D2       * Shift original left 1 byte
-00001120  5205                     122                    ADDI.B  #1,D5
-00001122  60B8                     123                    BRA     CHECK_LOOP
-00001124                           124  
-00001124                           125  CHECK_CHAR
-00001124  B83C 000A                126                    CMP.B   #$A,D4
-00001128  6D00 0010                127                    BLT     HEX_TO_NUM
-0000112C  0604 0037                128                    ADDI.B  #$37,D4
-00001130  1204                     129                    MOVE.B  D4,D1
-00001132  4EB9 00001148            130                    JSR     PRINT_CHAR
-00001138  4E75                     131                    RTS
-0000113A                           132          
-0000113A                           133  HEX_TO_NUM
-0000113A  0604 0030                134                    ADDI.B  #$30,D4
-0000113E  1204                     135                    MOVE.B  D4,D1
-00001140  4EB9 00001148            136                    JSR     PRINT_CHAR
-00001146  4E75                     137                    RTS
-00001148                           138                    
-00001148                           139  PRINT_CHAR
-00001148  103C 0006                140                    MOVE.B  #6,D0
-0000114C  4E4F                     141                    TRAP    #15
-0000114E  4281                     142                    CLR.L   D1
-00001150  4E75                     143                    RTS
-00001152                           144                  
-00001152                           145  ** Jump Table **
-00001152  4EB9 0000115E            146                    JSR     OPCODE_RTS
-00001158  4EB9 00001164            147                    JSR     OPCODE_JSR
-0000115E                           148  
-0000115E                           149  
-0000115E                           150  OPCODE_RTS
-0000115E  0C78 4E75 0000           151                    CMPI.W   #$4E75,$0000
-00001164                           152  
-00001164                           153  OPCODE_JSR
-00001164                           154  
-00001164                           155  ENDING
-00001164                           156  
-00001164                           157  
-00001164                           158  
-00001164                           159  
-00001164                           160  
-00001164                           161  CLEAR_REGISTERS
-00001164  4280                     162          CLR.L   D0
-00001166  4285                     163          CLR.L   D5
-00001168  4282                     164          CLR.L   D2
-0000116A  4281                     165          CLR.L   D1
-0000116C  4283                     166          CLR.L   D3
-0000116E  4284                     167          CLR.L   D4
-00001170  4286                     168          CLR.L   D6
-00001172  227C 00000000            169          MOVE.L  #$00000000,A1
-00001178  247C 00000000            170          MOVE.L  #$00000000,A2
-0000117E  267C 00000000            171          MOVE.L  #$00000000,A3
-00001184  287C 00000000            172          MOVE.L  #$00000000,A4
-0000118A  2A7C 00000000            173          MOVE.L  #$00000000,A5
-00001190  4E75                     174          RTS
-00001192                           175          
-00001192                           176  *---------------------------------------------------------------------
-00001192                           177  *Variable
-00001192                           178  *---------------------------------------------------------------------
-00001192                           179  Addr1       DS.L    1
-00001196                           180  Addr2       DS.L    1   
-0000119A                           181  *---------------------------------------------------------------------
-0000119A                           182  *MESSAGE
-0000119A                           183  *---------------------------------------------------------------------
-0000119A  =0000000D                184  CR      EQU     $0D             ASCII code for Carriage Return
-0000119A  =0000000A                185  LF      EQU     $0A             ASCII code for Line Feed
-0000119A                           186  
-0000119A= 57 65 6C 63 6F 6D ...    187  GREETING_MSG    DC.B    'Welcome to A Disassembler for the Motorola MC68000 Microprocessor',CR,LF
-000011DD= 54 79 70 65 20 79 ...    188                  DC.B    'Type your address that must be 8 hexdecimal characters',CR,LF
-00001215= 54 68 65 20 53 74 ...    189                  DC.B    'The Starting address must be greater than $00001000.',CR,LF
-0000124B= 54 68 65 20 65 6E ...    190                  DC.B    'The ending address must be greater than the starting address.',CR,LF 
-0000128A= 54 68 65 20 61 64 ...    191                  DC.B    'The address should be even number address!',CR,LF,0
-000012B7                           192                  
-000012B7= 0D 0A 00                 193  NEWLINE         DC.B    CR,LF,0
-000012BA                           194  
-000012BA= 45 6E 74 65 72 20 ...    195  MessageSt               DC.B         'Enter the starting address:',CR,LF,0    
-000012D8                           196  
-000012D8= 45 6E 74 65 72 20 ...    197  MessageEn               DC.B         'Enter the Ending address:',CR,LF,0 
-000012F4                           198  
-000012F4= 45 6E 74 65 72 20 ...    199  ERRM         DC.B     'Enter Valid hexadecimal value: ', 0
-00001314                           200  *---------------------------------------------------------------------          
-00001314                           201      END    START        ; last line of source
+00001010  267C 00002000             21          MOVE.L  #$00002000,A3
+00001016  36FC 4E91                 22          MOVE.W  #$4E91,(A3)+
+0000101A                            23  
+0000101A                            24          
+0000101A                            25          
+0000101A  163C 0008                 26  InputS  MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
+0000101E  43F9 00001366             27          LEA        MessageSt,A1
+00001024  103C 000E                 28          MOVE.B     #14,D0
+00001028  4E4F                      29          TRAP       #15
+0000102A  103C 0002                 30          MOVE.B     #2,D0                     Trap task 2 does the following:
+0000102E  4E4F                      31          TRAP       #15             *Read string from keyboard and store at (A1), NULL terminated, length retuned in D1.W (max 80)
+00001030  4EF9 00001056             32          JMP        AtoH
+00001036                            33          
+00001036  4285                      34  InputE  CLR.L      D5
+00001038  4286                      35          CLR.L      D6      
+0000103A  163C 0008                 36          MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
+0000103E  43F9 00001384             37          LEA        MessageEn,A1
+00001044  103C 000E                 38          MOVE.B     #14,D0
+00001048  4E4F                      39          TRAP       #15  
+0000104A  103C 0002                 40          MOVE.B     #2,D0                     Trap task 2 does the following:
+0000104E  4E4F                      41          TRAP       #15             *Read string from keyboard and store at (A1), NULL terminated, length retuned in D1.W (max 80)
+00001050  4EF9 00001056             42          JMP        AtoH
+00001056                            43          
+00001056  1C19                      44  AtoH    MOVE.B      (A1)+,D6        * move user input data from (A1) to D6          
+00001058  0C06 0030                 45          CMPI.B      #$30,D6
+0000105C  6D0E                      46          BLT.B       ERR 
+0000105E  BC3C 0039                 47          CMP.B       #$39,D6 
+00001062  6E16                      48          BGT.B       ALPHA    
+00001064  0406 0030                 49          SUBI.B      #$30,D6
+00001068  6000 0026                 50          BRA         AddressCounting
+0000106C                            51  
+0000106C  43F9 000013A0             52  ERR     LEA         ERRM,A1
+00001072  103C 000E                 53          MOVE.B      #14,D0  
+00001076  4E4F                      54          TRAP        #15    
+00001078  60A0                      55          BRA         InputS   
+0000107A                            56          
+0000107A  0C06 0041                 57  ALPHA   CMPI.B      #$41,D6 
+0000107E  6DEC                      58          BLT.B       ERR
+00001080  0C06 0046                 59          CMPI.B      #$46,D6 
+00001084  6EE6                      60          BGT.B       ERR 
+00001086  0406 0037                 61          SUBI.B      #$37,D6
+0000108A  6000 0004                 62          BRA         AddressCounting    
+0000108E  4E75                      63          RTS
+00001090                            64          
+00001090  DA06                      65  AddressCounting   ADD.B   D6,D5 
+00001092  5303                      66                    SUBI.B  #1,D3  
+00001094  B63C 0000                 67                    CMP.B   #$0,D3    
+00001098  6700 000A                 68                    BEQ     StartingAd          
+0000109C  E985                      69                    ASL.L   #$04,D5
+0000109E  B63C 0000                 70                    CMP.B   #$0,D3
+000010A2  66B2                      71                    BNE     AtoH
+000010A4                            72  
+000010A4  5304                      73  StartingAd        SUBI.B  #1,D4
+000010A6  B83C 0000                 74                    CMP.B   #$0,D4
+000010AA  6700 000C                 75                    BEQ     EndingAd
+000010AE  23C5 00001236             76                    MOVE.L  D5,Addr1
+000010B4  4EF8 1036                 77                    JMP     InputE
+000010B8                            78  
+000010B8                            79  ** Addr1 now contains the ending address
+000010B8                            80  ** Addr2 now contains the starting address
+000010B8  23C5 0000123A             81  EndingAd          MOVE.L  D5,Addr2                            
+000010BE  2C79 00001236             82                    MOVE.L  Addr1,A6
+000010C4                            83                    
+000010C4                            84  ** Use A6 for current address?
+000010C4                            85  ** Compare starting and ending addresses -------------------------------
+000010C4                            86  ** EXPECT: D7 stores the opcode and A6 the current address
+000010C4                            87  CHECK_ENDING
+000010C4  2A79 0000123A             88                    MOVE.L  Addr2,A5
+000010CA  BBCE                      89                    CMPA.L  A6,A5
+000010CC  6700 013A                 90                    BEQ     ENDING
+000010D0                            91                    
+000010D0  2A7C 00000000             92                    MOVE.L  #$00000000,A5
+000010D6  0C39 0019 0000123E        93                    CMP.B   #25,LINE_COUNTER
+000010DE  6600 0002                 94                    BNE     CONT_ADR_LOOP
+000010E2                            95                    ** JSR   User response
+000010E2                            96  CONT_ADR_LOOP
+000010E2  5239 0000123E             97                    ADD.B   #1,LINE_COUNTER
+000010E8  4EB9 00001208             98                    JSR     CLEAR_REGISTERS
+000010EE  4EB9 0000111A             99                    JSR     PRINT_CURRENT_ADR
+000010F4  4EB9 00001208            100                    JSR     CLEAR_REGISTERS
+000010FA                           101                    
+000010FA  4BF9 00001242            102                    LEA     PRINTER,A5   * Reset printer back
+00001100  3E1E                     103                    MOVE.W  (A6)+,D7
+00001102  4EB9 0000119A            104                    JSR     OPCODE_JUMP_TABLE  
+00001108                           105                    
+00001108                           106                    **  Check for bad data
+00001108  1AFC 0000                107                    MOVE.B  #$00,(A5)+   * Terminate string
+0000110C  43F9 00001242            108                    LEA     PRINTER,A1   
+00001112  103C 000D                109                    MOVE.B  #13,D0       * Print
+00001116  4E4F                     110                    TRAP    #15
+00001118  60AA                     111                    BRA     CHECK_ENDING
+0000111A                           112                    
+0000111A                           113  ** Convert hex to ascii and print memory addresses --------------------
+0000111A                           114  ** EXPECT: Clear registers, current address at A6, D2,D3,D4,D5 *************************************
+0000111A                           115  PRINT_CURRENT_ADR
+0000111A  240E                     116                    MOVE.L  A6,D2
+0000111C  1A3C 0000                117                    MOVE.B  #0,D5
+00001120  1C3C 0004                118                    MOVE.B  #4,D6  * Loop 4 times
+00001124                           119                    
+00001124                           120  CHECK_LOOP
+00001124  BC05                     121                    CMP.B   D5,D6
+00001126  6600 0010                122                    BNE     CONVERT_HEX_TO_ASCII
+0000112A  43F9 00001363            123                    LEA     NEWLINE,A1
+00001130  103C 000E                124                    MOVE.B  #14,D0
+00001134  4E4F                     125                    TRAP    #15
+00001136  4E75                     126                    RTS
+00001138                           127                    
+00001138                           128  CONVERT_HEX_TO_ASCII
+00001138  2602                     129                    MOVE.L  D2,D3
+0000113A  0A83 00FFFFFF            130                    EOR.L   #%00000000111111111111111111111111,D3  
+00001140  C682                     131                    AND.L   D2,D3
+00001142  E08B                     132                    LSR.L   #8,D3
+00001144  E08B                     133                    LSR.L   #8,D3
+00001146  E08B                     134                    LSR.L   #8,D3      * D3 has leftmost byte
+00001148  1803                     135                    MOVE.B  D3,D4 
+0000114A  0A04 000F                136                    EOR.B   #%00001111,D4
+0000114E  C803                     137                    AND.B   D3,D4   
+00001150  E80C                     138                    LSR.B   #4,D4       * D4 has left 4 bits
+00001152  4EB9 0000116C            139                    JSR     CHECK_CHAR
+00001158  1803                     140                    MOVE.B  D3,D4
+0000115A  0A04 00F0                141                    EOR.B   #%11110000,D4
+0000115E  C803                     142                    AND.B   D3,D4      * D4 has right 4 bits
+00001160  4EB9 0000116C            143                    JSR     CHECK_CHAR
+00001166  E182                     144                    ASL.L   #8,D2       * Shift original left 1 byte
+00001168  5205                     145                    ADDI.B  #1,D5
+0000116A  60B8                     146                    BRA     CHECK_LOOP
+0000116C                           147  
+0000116C                           148  CHECK_CHAR
+0000116C  B83C 000A                149                    CMP.B   #$A,D4
+00001170  6D00 0010                150                    BLT     HEX_TO_NUM
+00001174  0604 0037                151                    ADDI.B  #$37,D4
+00001178  1204                     152                    MOVE.B  D4,D1
+0000117A  4EB9 00001190            153                    JSR     PRINT_CHAR
+00001180  4E75                     154                    RTS
+00001182                           155          
+00001182                           156  HEX_TO_NUM
+00001182  0604 0030                157                    ADDI.B  #$30,D4
+00001186  1204                     158                    MOVE.B  D4,D1
+00001188  4EB9 00001190            159                    JSR     PRINT_CHAR
+0000118E  4E75                     160                    RTS
+00001190                           161                    
+00001190                           162  PRINT_CHAR
+00001190  103C 0006                163                    MOVE.B  #6,D0
+00001194  4E4F                     164                    TRAP    #15
+00001196  4281                     165                    CLR.L   D1
+00001198  4E75                     166                    RTS
+0000119A                           167  ********************************************************************************************
+0000119A                           168                  
+0000119A                           169  OPCODE_JUMP_TABLE
+0000119A  4EB9 000011AA            170                    JSR     OPCODE_RTS
+000011A0  4E75                     171                    RTS
+000011A2  4EB9 000011B0            172                    JSR     OPCODE_JSR
+000011A8  4E75                     173                    RTS
+000011AA                           174  
+000011AA                           175  
+000011AA                           176  OPCODE_RTS
+000011AA  0C78 4E75 0000           177                    CMPI.W   #$4E75,$0000
+000011B0                           178  
+000011B0                           179  OPCODE_JSR
+000011B0  3C07                     180            MOVE.W    D7,D6
+000011B2  EC46                     181            ASR.W     #6,D6
+000011B4  BC7C 013A                182            CMP.W     #$013A,D6
+000011B8  6700 0004                183            BEQ       OPCODE_JSR_EA
+000011BC  4E75                     184            RTS
+000011BE                           185      
+000011BE                           186  OPCODE_JSR_EA
+000011BE                           187            ** PRINT JSR
+000011BE  1AFC 004A                188            MOVE.B    #'J',(A5)+
+000011C2  1AFC 0053                189            MOVE.B    #'S',(A5)+
+000011C6  1AFC 0052                190            MOVE.B    #'R',(A5)+
+000011CA  1AFC 0020                191            MOVE.B    #' ',(A5)+
+000011CE  3A07                     192            MOVE.W    D7,D5
+000011D0  3807                     193            MOVE.W    D7,D4
+000011D2  0A44 FFC7                194            EOR.W     #%1111111111000111,D4
+000011D6  C841                     195            AND.W     D1,D4
+000011D8  B83C 0010                196            CMP.B     #$10,D4
+000011DC  6700 000A                197            BEQ       OPCODE_JSR_IND
+000011E0  B83C 0038                198            CMP.B     #$38,D4
+000011E4  6700 0020                199            BEQ       OPCODE_JSR_DIR
+000011E8                           200      
+000011E8                           201  * Test for address reg number (stored in D2)
+000011E8                           202  OPCODE_JSR_IND
+000011E8  1AFC 0028                203            MOVE.B    #'(',(A5)+
+000011EC  1AFC 0041                204            MOVE.B    #'A',(A5)+
+000011F0  3A07                     205            MOVE.W    D7,D5
+000011F2  3807                     206            MOVE.W    D7,D4
+000011F4  0A44 FFF8                207            EOR.W     #%1111111111111000,D4
+000011F8  CA44                     208            AND.W     D4,D5
+000011FA  0605 0030                209            ADDI.B    #$30,D5
+000011FE  1AC5                     210            MOVE.B    D5,(A5)+
+00001200  1AFC 0029                211            MOVE.B    #')',(A5)+
+00001204  4E75                     212            RTS
+00001206                           213      
+00001206                           214  OPCODE_JSR_DIR 
+00001206                           215            ** Get next word or long and print
+00001206  E247                     216            ASR.W     #1,D7
+00001208                           217  
+00001208                           218  ENDING
+00001208                           219  
+00001208                           220  
+00001208                           221  
+00001208                           222  
+00001208                           223  
+00001208                           224  CLEAR_REGISTERS
+00001208  4280                     225          CLR.L   D0
+0000120A  4285                     226          CLR.L   D5
+0000120C  4282                     227          CLR.L   D2
+0000120E  4281                     228          CLR.L   D1
+00001210  4283                     229          CLR.L   D3
+00001212  4284                     230          CLR.L   D4
+00001214  4286                     231          CLR.L   D6
+00001216  227C 00000000            232          MOVE.L  #$00000000,A1
+0000121C  247C 00000000            233          MOVE.L  #$00000000,A2
+00001222  267C 00000000            234          MOVE.L  #$00000000,A3
+00001228  287C 00000000            235          MOVE.L  #$00000000,A4
+0000122E  2A7C 00000000            236          MOVE.L  #$00000000,A5
+00001234  4E75                     237          RTS
+00001236                           238          
+00001236                           239  *---------------------------------------------------------------------
+00001236                           240  *Variable
+00001236                           241  *---------------------------------------------------------------------
+00001236                           242  Addr1         DS.L    1
+0000123A                           243  Addr2         DS.L    1
+0000123E                           244  LINE_COUNTER  DS.L    1
+00001242= 00000001                 245  PRINTER       DC.L    1  * Printer pointer
+00001246                           246  *---------------------------------------------------------------------
+00001246                           247  *MESSAGE
+00001246                           248  *---------------------------------------------------------------------
+00001246  =0000000D                249  CR      EQU     $0D             ASCII code for Carriage Return
+00001246  =0000000A                250  LF      EQU     $0A             ASCII code for Line Feed
+00001246                           251  
+00001246= 57 65 6C 63 6F 6D ...    252  GREETING_MSG    DC.B    'Welcome to A Disassembler for the Motorola MC68000 Microprocessor',CR,LF
+00001289= 54 79 70 65 20 79 ...    253                  DC.B    'Type your address that must be 8 hexdecimal characters',CR,LF
+000012C1= 54 68 65 20 53 74 ...    254                  DC.B    'The Starting address must be greater than $00001000.',CR,LF
+000012F7= 54 68 65 20 65 6E ...    255                  DC.B    'The ending address must be greater than the starting address.',CR,LF 
+00001336= 54 68 65 20 61 64 ...    256                  DC.B    'The address should be even number address!',CR,LF,0
+00001363                           257                  
+00001363= 0D 0A 00                 258  NEWLINE         DC.B    CR,LF,0
+00001366                           259  
+00001366= 45 6E 74 65 72 20 ...    260  MessageSt               DC.B         'Enter the starting address:',CR,LF,0    
+00001384                           261  
+00001384= 45 6E 74 65 72 20 ...    262  MessageEn               DC.B         'Enter the Ending address:',CR,LF,0 
+000013A0                           263  
+000013A0= 45 6E 74 65 72 20 ...    264  ERRM         DC.B     'Enter Valid hexadecimal value: ', 0
+000013C0                           265  *---------------------------------------------------------------------          
+000013C0                           266      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -211,32 +276,39 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-ADDR1               1192
-ADDR2               1196
-ADDRESSCOUNTING     1086
-ALPHA               1070
-ATOH                104C
-CHECK_CHAR          1124
-CHECK_ENDING        10BA
-CHECK_LOOP          10DC
-CLEAR_REGISTERS     1164
-CONVERT_HEX_TO_ASCII  10F0
+ADDR1               1236
+ADDR2               123A
+ADDRESSCOUNTING     1090
+ALPHA               107A
+ATOH                1056
+CHECK_CHAR          116C
+CHECK_ENDING        10C4
+CHECK_LOOP          1124
+CLEAR_REGISTERS     1208
+CONT_ADR_LOOP       10E2
+CONVERT_HEX_TO_ASCII  1138
 CR                  D
-ENDING              1164
-ENDINGAD            10AE
-ERR                 1062
-ERRM                12F4
-GREETING_MSG        119A
-HEX_TO_NUM          113A
-INPUTE              102C
-INPUTS              1010
+ENDING              1208
+ENDINGAD            10B8
+ERR                 106C
+ERRM                13A0
+GREETING_MSG        1246
+HEX_TO_NUM          1182
+INPUTE              1036
+INPUTS              101A
 LF                  A
-MESSAGEEN           12D8
-MESSAGEST           12BA
-NEWLINE             12B7
-OPCODE_JSR          1164
-OPCODE_RTS          115E
-PRINT_CHAR          1148
-PRINT_CURRENT_ADR   10CC
+LINE_COUNTER        123E
+MESSAGEEN           1384
+MESSAGEST           1366
+NEWLINE             1363
+OPCODE_JSR          11B0
+OPCODE_JSR_DIR      1206
+OPCODE_JSR_EA       11BE
+OPCODE_JSR_IND      11E8
+OPCODE_JUMP_TABLE   119A
+OPCODE_RTS          11AA
+PRINTER             1242
+PRINT_CHAR          1190
+PRINT_CURRENT_ADR   111A
 START               1000
-STARTINGAD          109A
+STARTINGAD          10A4

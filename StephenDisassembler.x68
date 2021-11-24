@@ -24,8 +24,7 @@ START:                  ; first instruction of program
     CMP.B     #$10,D2
     BEQ       IND
     CMP.B     #$38,D2
-    BEQ       DIR
-    
+    BEQ       DIR    
 * Test for address reg number (stored in D2)
 IND MOVE.W    D0,D1
     MOVE.W    D0,D2
@@ -45,6 +44,7 @@ DIR ASR.W     #1,D0
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 *~Font name~Courier New~

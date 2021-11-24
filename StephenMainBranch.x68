@@ -18,6 +18,9 @@ START   ORG     $1000
         MOVE.B  #14,D0
         TRAP    #15 
         
+        MOVE.L  #$00002000,A3
+        MOVE.W  #$4E91,(A3)+
+
         
         
 InputS  MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
@@ -79,17 +82,37 @@ EndingAd          MOVE.L  D5,Addr2
                   MOVE.L  Addr1,A6
                   
 ** Use A6 for current address?
+** Compare starting and ending addresses -------------------------------
+** EXPECT: D7 stores the opcode and A6 the current address
 CHECK_ENDING
                   MOVE.L  Addr2,A5
                   CMPA.L  A6,A5
                   BEQ     ENDING
-                  ADD.L   #$2,A6
-                  BRA     PRINT_CURRENT_ADR
                   
-                  
-** EXPECT: Clear registers, current address at A6
-PRINT_CURRENT_ADR
+                  MOVE.L  #$00000000,A5
+                  CMP.B   #25,LINE_COUNTER
+                  BNE     CONT_ADR_LOOP
+                  ** JSR   User response
+CONT_ADR_LOOP
+                  ADD.B   #1,LINE_COUNTER
                   JSR     CLEAR_REGISTERS
+                  JSR     PRINT_CURRENT_ADR
+                  JSR     CLEAR_REGISTERS
+                  
+                  LEA     PRINTER,A5   * Reset printer back
+                  MOVE.W  (A6)+,D7
+                  JSR     OPCODE_JUMP_TABLE  
+                  
+                  **  Check for bad data
+                  MOVE.B  #$00,(A5)+   * Terminate string
+                  LEA     PRINTER,A1   
+                  MOVE.B  #13,D0       * Print
+                  TRAP    #15
+                  BRA     CHECK_ENDING
+                  
+** Convert hex to ascii and print memory addresses --------------------
+** EXPECT: Clear registers, current address at A6, D2,D3,D4,D5 *************************************
+PRINT_CURRENT_ADR
                   MOVE.L  A6,D2
                   MOVE.B  #0,D5
                   MOVE.B  #4,D6  * Loop 4 times
@@ -100,7 +123,7 @@ CHECK_LOOP
                   LEA     NEWLINE,A1
                   MOVE.B  #14,D0
                   TRAP    #15
-                  BRA     CHECK_ENDING
+                  RTS
                   
 CONVERT_HEX_TO_ASCII
                   MOVE.L  D2,D3
@@ -141,16 +164,56 @@ PRINT_CHAR
                   TRAP    #15
                   CLR.L   D1
                   RTS
+********************************************************************************************
                 
-** Jump Table **
+OPCODE_JUMP_TABLE
                   JSR     OPCODE_RTS
+                  RTS
                   JSR     OPCODE_JSR
+                  RTS
 
 
 OPCODE_RTS
                   CMPI.W   #$4E75,$0000
 
 OPCODE_JSR
+          MOVE.W    D7,D6
+          ASR.W     #6,D6
+          CMP.W     #$013A,D6
+          BEQ       OPCODE_JSR_EA
+          RTS
+    
+OPCODE_JSR_EA
+          ** PRINT JSR
+          MOVE.B    #'J',(A5)+
+          MOVE.B    #'S',(A5)+
+          MOVE.B    #'R',(A5)+
+          MOVE.B    #' ',(A5)+
+          MOVE.W    D7,D5
+          MOVE.W    D7,D4
+          EOR.W     #%1111111111000111,D4
+          AND.W     D1,D4
+          CMP.B     #$10,D4
+          BEQ       OPCODE_JSR_IND
+          CMP.B     #$38,D4
+          BEQ       OPCODE_JSR_DIR
+    
+* Test for address reg number (stored in D2)
+OPCODE_JSR_IND
+          MOVE.B    #'(',(A5)+
+          MOVE.B    #'A',(A5)+
+          MOVE.W    D7,D5
+          MOVE.W    D7,D4
+          EOR.W     #%1111111111111000,D4
+          AND.W     D4,D5
+          ADDI.B    #$30,D5
+          MOVE.B    D5,(A5)+
+          MOVE.B    #')',(A5)+
+          RTS
+    
+OPCODE_JSR_DIR 
+          ** Get next word or long and print
+          ASR.W     #1,D7
 
 ENDING
 
@@ -176,8 +239,10 @@ CLEAR_REGISTERS
 *---------------------------------------------------------------------
 *Variable
 *---------------------------------------------------------------------
-Addr1       DS.L    1
-Addr2       DS.L    1   
+Addr1         DS.L    1
+Addr2         DS.L    1
+LINE_COUNTER  DS.L    1
+PRINTER       DC.L    1  * Printer pointer
 *---------------------------------------------------------------------
 *MESSAGE
 *---------------------------------------------------------------------
@@ -207,6 +272,7 @@ ERRM         DC.B     'Enter Valid hexadecimal value: ', 0
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
 
 *~Font name~Courier New~
 *~Font size~10~
