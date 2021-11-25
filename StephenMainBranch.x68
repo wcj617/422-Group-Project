@@ -18,9 +18,9 @@ START   ORG     $1000
         MOVE.B  #14,D0
         TRAP    #15 
         
+        MOVE.B  #1,WORD_LONG_SWITCH
         MOVE.L  #$00002000,A3
         MOVE.W  #$4E91,(A3)+
-
         
         
 InputS  MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
@@ -115,7 +115,12 @@ CONT_ADR_LOOP
 PRINT_CURRENT_ADR
                   MOVE.L  A6,D2
                   MOVE.B  #0,D5
-                  MOVE.B  #4,D6  * Loop 4 times
+                  CMPI.B  #0,WORD_LONG_SWITCH
+                  BEQ     SET_WORD_COUNTER
+                  MOVE.B  #4,D6         * Loop 4 times for a long
+                  BRA     CHECK_LOOP
+                  
+SET_WORD_COUNTER  MOVE.B  #2,D6         * Loop 2 times for a word
                   
 CHECK_LOOP
                   CMP.B   D5,D6
@@ -212,7 +217,7 @@ OPCODE_JSR_IND
           RTS
     
 OPCODE_JSR_DIR 
-          ** Get next word or long and print
+          ** Get next word or long and print
           ASR.W     #1,D7
 
 ENDING
@@ -243,6 +248,7 @@ Addr1         DS.L    1
 Addr2         DS.L    1
 LINE_COUNTER  DS.L    1
 PRINTER       DC.L    1  * Printer pointer
+WORD_LONG_SWITCH  DS.L   1   * 0 for word, 1 for long
 *---------------------------------------------------------------------
 *MESSAGE
 *---------------------------------------------------------------------
@@ -272,6 +278,7 @@ ERRM         DC.B     'Enter Valid hexadecimal value: ', 0
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
 
 
 *~Font name~Courier New~
