@@ -18,6 +18,7 @@ START   ORG     $1000
         MOVE.B  #14,D0
         TRAP    #15 
         
+        MOVE.B  #0,LINE_COUNTER
         MOVE.B  #0,BAD_DATA_SWITCH  
         
         MOVE.B  #1,WORD_LONG_SWITCH
@@ -191,9 +192,7 @@ SET_WORD_COUNTER  MOVE.B  #2,D6         * Loop 2 times for a word
 CHECK_LOOP
                   CMP.B   D5,D6
                   BNE     CONVERT_HEX_TO_ASCII
-                  LEA     NEWLINE,A1
-                  MOVE.B  #14,D0
-                  TRAP    #15
+                  
                   RTS
                   
 CONVERT_HEX_TO_ASCII
@@ -1351,11 +1350,11 @@ GREETING_MSG    DC.B    'Welcome to A Disassembler for the Motorola MC68000 Micr
                 
 NEWLINE         DC.B    CR,LF,0
 
-MessageSt               DC.B         'Enter the starting address:',CR,LF,0    
+MessageSt               DC.B         'Enter the starting address: ',0    
 
-MessageEn               DC.B         'Enter the Ending address:',CR,LF,0 
+MessageEn               DC.B         'Enter the Ending address: ',0 
 
-ERRM         DC.B     'Enter Valid hexadecimal value: ', 0
+ERRM         DC.B     'Enter Valid hexadecimal value: ',0
 *---------------------------------------------------------------------          
     END    START        ; last line of source
 
