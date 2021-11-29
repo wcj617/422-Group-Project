@@ -90,11 +90,11 @@ EndingAd          MOVE.L  D5,Addr2
 CHECK_ENDING
                   JSR     CLEAR_REGISTERS             * Clear registers
                   MOVE.L  Addr2,A5
-                  CMPA.L  A6,A5
-                  BEQ     ENDING
+                  CMP.L   A5,A6
+                  BGT     END_PROGRAM_MSG 
                   
                   MOVE.L  #$00000000,A5
-                  CMP.B   #25,LINE_COUNTER
+                  CMP.B   #25,LINE_COUNTER  
                   BNE     CONT_ADR_LOOP
                   JSR     USER_RESPONSE
 CONT_ADR_LOOP
@@ -108,6 +108,9 @@ CONT_ADR_LOOP
                   JSR     OPCODE_JUMP_TABLE  
                   
                   **  Check for bad data
+                  CMP.B   #10, BAD_DATA_SWITCH        * Check if Bad Data Switch is True
+                  BEQ     PRINT_BAD_DATA  
+
                   MOVE.B  #$00,(A5)+   * Terminate string
                   LEA     PRINTER,A1   
                   MOVE.B  #13,D0       * Print
@@ -190,60 +193,49 @@ IS_LET_L
 ** Convert hex to ascii and print memory addresses --------------------
 ** EXPECT: Clear registers, current address at A6, D2,D3,D4,D5 *************************************
 PRINT_CURRENT_ADR
-                  MOVE.L  A6,D2
-                  MOVE.B  #0,D5
-                  CMPI.B  #0,WORD_LONG_SWITCH
-                  BEQ     SET_WORD_COUNTER
-                  MOVE.B  #4,D6         * Loop 4 times for a long
-                  BRA     CHECK_LOOP
-                  
-SET_WORD_COUNTER  MOVE.B  #2,D6         * Loop 2 times for a word
-                  
-CHECK_LOOP
-                  CMP.B   D5,D6
-                  BNE     CONVERT_HEX_TO_ASCII
-                  
-                  RTS
-                  
-CONVERT_HEX_TO_ASCII
-                  MOVE.L  D2,D3
-                  EOR.L   #%00000000111111111111111111111111,D3  
-                  AND.L   D2,D3
-                  LSR.L   #8,D3
-                  LSR.L   #8,D3
-                  LSR.L   #8,D3      * D3 has leftmost byte
-                  MOVE.B  D3,D4 
-                  EOR.B   #%00001111,D4
-                  AND.B   D3,D4   
-                  LSR.B   #4,D4       * D4 has left 4 bits
-                  JSR     CHECK_CHAR
-                  MOVE.B  D3,D4
-                  EOR.B   #%11110000,D4
-                  AND.B   D3,D4      * D4 has right 4 bits
-                  JSR     CHECK_CHAR
-                  ASL.L   #8,D2       * Shift original left 1 byte
-                  ADDI.B  #1,D5
-                  BRA     CHECK_LOOP
+        MOVE.L      A6,D2                       * Move current address into D2
+        MOVE.B      #0,D5                       * Set counter to read all hex
+        MOVE.B      #8,D6                       
+CONVERT_HEX_ASCII
+        CMP.B       D5,D6                       * Check if last hex character is read
+        BNE         SET_COUNTER_4               * Set counter to read 4 bits
+        MOVE.B      #6, D0
+        MOVE.B      #32, D1
+        TRAP        #15
+        TRAP        #15
+        TRAP        #15
+        RTS
+SET_COUNTER_4
+        MOVE.B      #0,D3                       
+        MOVE.B      #4,D4    
+Loop
+        CMP.B       D3,D4                       * Read one character at a time
+        BEQ         STORE_ONE_CHAR
+        LSL.L       #1,D2
+        BCC         ADDZERO
+        ADDI.B      #1,D1
+        BRA         INCREMENT_BIT_LOOP
+ADDZERO
+        ADDI.B      #0,D1
+INCREMENT_BIT_LOOP
+        ADDI.B      #1,D3
+        LSL.L       #1,D1
+        BRA         Loop
+STORE_ONE_CHAR                                   * Store hex character
+        LSR.L       #1,D1
+        CMP.B       #$A,D1
+        BLT         HEX_TO_ASCII_NUMBER
+        ADDI.B      #$37,D1                     * HEX_TO_ASCII_LETTER
+        BRA         INCREMENT_NEXT_HEX_LOOP
+HEX_TO_ASCII_NUMBER
+        ADDI.B      #$30,D1
+INCREMENT_NEXT_HEX_LOOP
+        ADDI.B      #1,D5
+        MOVE.B      #6,D0
+        TRAP        #15
+        CLR.L       D1
+        BRA         CONVERT_HEX_ASCII
 
-CHECK_CHAR
-                  CMP.B   #$A,D4
-                  BLT     HEX_TO_NUM
-                  ADDI.B  #$37,D4
-                  MOVE.B  D4,D1
-                  JSR     PRINT_CHAR
-                  RTS
-        
-HEX_TO_NUM
-                  ADDI.B  #$30,D4
-                  MOVE.B  D4,D1
-                  JSR     PRINT_CHAR
-                  RTS
-                  
-PRINT_CHAR
-                  MOVE.B  #6,D0
-                  TRAP    #15
-                  CLR.L   D1
-                  RTS
 ********************************************************************************************
                 
 OPCODE_JUMP_TABLE
@@ -296,7 +288,8 @@ OPCODE_JMP_TABLE
 *********************************************************
 * 0100 Jump Table - USE FOR CLR, JSR, LEA, RTS - NOT MOVEM
 THREE_TABLE     
-                        
+    JSR     THREE000            - LEA                  
+    RTS                                 
     JSR     THREE001            - LEA, CLR        
     RTS                                 
     JSR     THREE010            - LEA
@@ -1073,55 +1066,16 @@ OPCODE1010
 OPCODE1111 
     ADD.B       #10, BAD_DATA_SWITCH               
     RTS                          
-********************************************************    
-
-OPCODE_RTS
-                  CMPI.W   #$4E75,$0000
-
-OPCODE_JSR
-          MOVE.W    D7,D6
-          ASR.W     #6,D6
-          CMP.W     #$013A,D6
-          BEQ       OPCODE_JSR_EA
-          RTS
-    
-OPCODE_JSR_EA
-          ** PRINT JSR
-          MOVE.B    #'J',(A5)+
-          MOVE.B    #'S',(A5)+
-          MOVE.B    #'R',(A5)+
-          MOVE.B    #' ',(A5)+
-          MOVE.W    D7,D5
-          MOVE.W    D7,D4
-          EOR.W     #%1111111111000111,D4
-          AND.W     D1,D4
-          CMP.B     #$10,D4
-          BEQ       OPCODE_JSR_IND
-          CMP.B     #$38,D4
-          BEQ       OPCODE_JSR_DIR
-    
-* Test for address reg number (stored in D2)
-OPCODE_JSR_IND
-          MOVE.B    #'(',(A5)+
-          MOVE.B    #'A',(A5)+
-          MOVE.W    D7,D5
-          MOVE.W    D7,D4
-          EOR.W     #%1111111111111000,D4
-          AND.W     D4,D5
-          ADDI.B    #$30,D5
-          MOVE.B    D5,(A5)+
-          MOVE.B    #')',(A5)+
-          RTS
-    
-OPCODE_JSR_DIR 
-          ** Get next word or long and print
-          ASR.W     #1,D7
-
-ENDING
-
-
-
 * JUMP TABLE SUBROUTINES FOR OPCODE 0100 EXCEPT MOVEM ------------------------  
+THREE000
+    MOVE.W          D5, D6                     
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    ANDI.W          #$0007, D6
+    MULU            #8, D6
+    LEA             THREE_TABLE_2, A0
+    JSR             00(A0,D6) 
+    RTS
 THREE001
     MOVE.W          D5, D6                     
     ROL.W           #3, D6
