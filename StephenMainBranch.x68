@@ -20,10 +20,7 @@ START   ORG     $1000
         
         MOVE.B  #0,LINE_COUNTER
         MOVE.B  #0,BAD_DATA_SWITCH  
-        
-        MOVE.B  #1,WORD_LONG_SWITCH
-        MOVE.L  #$00002000,A3
-        MOVE.W  #$4E91,(A3)+
+
         
         
 InputS  MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
@@ -101,7 +98,7 @@ CONT_ADR_LOOP
                   ADD.B   #1,LINE_COUNTER
                   JSR     CLEAR_REGISTERS
                   JSR     PRINT_CURRENT_ADR
-                  JSR     CLEAR_REGISTERS
+
                   
                   LEA     PRINTER,A5   * Reset printer back
                   MOVE.W  (A6)+,D7
@@ -2971,10 +2968,11 @@ Addr1               DS.L    1
 Addr2               DS.L    1
 LINE_COUNTER        DS.L    1
 PRINTER             DC.L    1  * Printer pointer
-WORD_LONG_SWITCH    DS.L    1   * 0 for word, 1 for long
 BAD_DATA_SWITCH     DS.L    1 
 PROMPTOPTIONS       DC.B    'Press: ENTER to Continue || Q or q to Quit || R OR r to Restart',CR,LF,CR,LF,0
 RESTART_PROGRAM_MSG DC.B    'Press: Y/y to restart || N/n to end program',CR,LF,CR,LF,0
+SIZE                DS.B    1
+INPUT_HEX           DS.L    1   * Use to temp hold starting and ending address
 
 *---------------------------------------------------------------------
 *MESSAGE
@@ -3003,6 +3001,7 @@ ERRM         DC.B     'Enter Valid hexadecimal value: ',0
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
 
 
 
