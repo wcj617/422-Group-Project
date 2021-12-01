@@ -16,12 +16,9 @@ START   ORG     $1000
         MOVE.B  #2,D4                  *for Starting and Ending address                      ; first instruction of program
         LEA     GREETING_MSG,A1
         MOVE.B  #14,D0
-        TRAP    #15 
-        
+        TRAP    #15         
         MOVE.B  #0,LINE_COUNTER
         MOVE.B  #0,BAD_DATA_SWITCH  
-
-        
         
 InputS  MOVE.B     #8,D3            *Read 8 digit hexdecimal value in D3;
         LEA        MessageSt,A1
@@ -84,35 +81,34 @@ EndingAd          MOVE.L  D5,Addr2
 ** Use A6 for current address?
 ** Compare starting and ending addresses -------------------------------
 ** EXPECT: D7 stores the opcode and A6 the current address
-CHECK_ENDING
-                  JSR     CLEAR_REGISTERS             * Clear registers
-                  MOVE.L  Addr2,A5
-                  CMP.L   A5,A6
-                  BGT     END_PROGRAM_MSG 
+ADDR_LOOP
+         JSR     CLEAR_REGISTERS             * Clear registers
+         MOVE.L  Addr2,A5
+         CMP.L   A5,A6
+        BGT     END_PROGRAM_MSG 
                   
-                  MOVE.L  #$00000000,A5
-                  CMP.B   #25,LINE_COUNTER  
-                  BNE     CONT_ADR_LOOP
-                  JSR     USER_RESPONSE
-CONT_ADR_LOOP
-                  ADD.B   #1,LINE_COUNTER
-                  JSR     CLEAR_REGISTERS
-                  JSR     PRINT_CURRENT_ADR
+        MOVE.L      #$00000000, A5
+        CMP.B       #25, LINE_COUNTER           * Check line counter
+        BNE         CONTINUE_ADDR_LOOP
+        JSR         USER_RESPONSE         
+CONTINUE_ADDR_LOOP        
+        ADD.B       #1, LINE_COUNTER            * Update Line counter
+        JSR         CLEAR_REGISTERS             * Clear registers
+        JSR         PRINT_CURRENT_ADD           * PRINT CURRENT ADDRESS
+        
+        LEA         PRINTER, A5                  
+        MOVE.W      (A6)+, D7
+        JSR         FILL_Printer                * FILL Printer
+        
+        CMP.B       #10, BAD_DATA_SWITCH        * Check if Bad Data Switch is True
+        BEQ         PRINT_BAD_DATA  
+        MOVE.B      #$00,(A5)+                  * Add 00 to opcode printer to every printer
+        LEA         PRINTER, A1		            * Load Printer
+        MOVEQ       #13,D0				
+        TRAP        #15					
 
-                  
-                  LEA     PRINTER,A5   * Reset printer back
-                  MOVE.W  (A6)+,D7
-                  JSR     OPCODE_JUMP_TABLE  
-                  
-                  **  Check for bad data
-                  CMP.B   #10, BAD_DATA_SWITCH        * Check if Bad Data Switch is True
-                  BEQ     PRINT_BAD_DATA  
-
-                  MOVE.B  #$00,(A5)+   * Terminate string
-                  LEA     PRINTER,A1   
-                  MOVE.B  #13,D0       * Print
-                  TRAP    #15
-                  BRA     CHECK_ENDING
+        BRA         ADDR_LOOP
+        
 PRINT_BAD_DATA                                   
         JSR         CLEAR_REGISTERS             * Clear registers
         LEA         PRINTER, A5
@@ -122,8 +118,8 @@ PRINT_BAD_DATA
         MOVEQ       #13,D0				        
         TRAP        #15		
         MOVE.B      #$00, BAD_DATA_SWITCH       * Reset SWITCH  
-        BRA         CHECK_ENDING		            * Continue reading opcodes
-
+        BRA         ADDR_LOOP		            * Continue reading opcodes
+        
 * BAD DATA PRINTER -----------------------------------------------------
 BAD_DATA
         MOVE.B      #'B',(A5)+			        * SET UP 'BAD DATA'
@@ -185,58 +181,8 @@ IS_LET_L
     	RTS    	
     	
     	
-
-                  
-** Convert hex to ascii and print memory addresses --------------------
-** EXPECT: Clear registers, current address at A6, D2,D3,D4,D5 *************************************
-PRINT_CURRENT_ADR
-        MOVE.L      A6,D2                       * Move current address into D2
-        MOVE.B      #0,D5                       * Set counter to read all hex
-        MOVE.B      #8,D6                       
-CONVERT_HEX_ASCII
-        CMP.B       D5,D6                       * Check if last hex character is read
-        BNE         SET_COUNTER_4               * Set counter to read 4 bits
-        MOVE.B      #6, D0
-        MOVE.B      #32, D1
-        TRAP        #15
-        TRAP        #15
-        TRAP        #15
-        RTS
-SET_COUNTER_4
-        MOVE.B      #0,D3                       
-        MOVE.B      #4,D4    
-Loop
-        CMP.B       D3,D4                       * Read one character at a time
-        BEQ         STORE_ONE_CHAR
-        LSL.L       #1,D2
-        BCC         ADDZERO
-        ADDI.B      #1,D1
-        BRA         INCREMENT_BIT_LOOP
-ADDZERO
-        ADDI.B      #0,D1
-INCREMENT_BIT_LOOP
-        ADDI.B      #1,D3
-        LSL.L       #1,D1
-        BRA         Loop
-STORE_ONE_CHAR                                   * Store hex character
-        LSR.L       #1,D1
-        CMP.B       #$A,D1
-        BLT         HEX_TO_ASCII_NUMBER
-        ADDI.B      #$37,D1                     * HEX_TO_ASCII_LETTER
-        BRA         INCREMENT_NEXT_HEX_LOOP
-HEX_TO_ASCII_NUMBER
-        ADDI.B      #$30,D1
-INCREMENT_NEXT_HEX_LOOP
-        ADDI.B      #1,D5
-        MOVE.B      #6,D0
-        TRAP        #15
-        CLR.L       D1
-        BRA         CONVERT_HEX_ASCII
-
-********************************************************************************************
-                
-OPCODE_JUMP_TABLE
-
+* GO TO OPCODE AND FILL PRINTER -------------------------------------
+FILL_Printer
         MOVE.W      D7, D6                          
         ROL.W       #4, D6				            
         MOVE.W      D6, D5
@@ -246,7 +192,7 @@ OPCODE_JUMP_TABLE
         JSR         0(A0,D6)          	            
         RTS        
 
-********************************************************************************
+********************************************************************************************
 * JMP TABLES                                             
 OPCODE_JMP_TABLE
     JSR     OPCODE0000                           * - ADDI
@@ -318,7 +264,20 @@ THREE_TABLE_2
     JSR     THREE2110           - Bad Data
     RTS                                 
     JSR     THREE2111           - LEA     
+    RTS    
+********************************************************
+* INVALID OPCODES
+********************************************************
+OPCODE0101       
+    ADD.B       #10, BAD_DATA_SWITCH           
     RTS
+OPCODE1010  
+    ADD.B       #10, BAD_DATA_SWITCH              
+    RTS                         
+OPCODE1111 
+    ADD.B       #10, BAD_DATA_SWITCH               
+    RTS                          
+    
 ******************* ADDI ******************************************
 OPCODE0000
     MOVE.W          D7, D4
@@ -479,7 +438,6 @@ EA_001_CASE
     MOVE.B      #8,D3
     JSR         LONG_ASCII  
     RTS  
-    
     
 ******************* MOVE.B *************************************
 OPCODE0001
@@ -936,8 +894,7 @@ GET_SIZE_0100
     RTS
 SIZE_0100_W
     MOVE.B          #'W',(A5)+
-    RTS
-
+    RTS 
 ******************* BCC, BLE, BGT ****************************************************************************
 OPCODE0110                                               
     MOVE.W          D5, D6                      *D5:XXX6 -> D6:XXX6      
@@ -1051,308 +1008,6 @@ OPCODE0110_PRINT_LONG
     CLR.L           D6
     JSR             LONG_ASCII
     RTS 
-            
-*********************************************************
-* INVALID OPCODES
-OPCODE0101       
-    ADD.B       #10, BAD_DATA_SWITCH           
-    RTS
-OPCODE1010  
-    ADD.B       #10, BAD_DATA_SWITCH              
-    RTS                         
-OPCODE1111 
-    ADD.B       #10, BAD_DATA_SWITCH               
-    RTS                          
-* JUMP TABLE SUBROUTINES FOR OPCODE 0100 EXCEPT MOVEM ------------------------  
-THREE000
-    MOVE.W          D5, D6                     
-    ROL.W           #3, D6
-    MOVE.W          D6, D5
-    ANDI.W          #$0007, D6
-    MULU            #8, D6
-    LEA             THREE_TABLE_2, A0
-    JSR             00(A0,D6) 
-    RTS
-THREE001
-    MOVE.W          D5, D6                     
-    ROL.W           #3, D6
-    MOVE.W          D6, D5
-    ANDI.W          #$0007, D6
-    MULU            #8, D6
-    LEA             THREE_TABLE_2, A0
-    JSR             00(A0,D6) 
-    RTS    
-THREE010
-    MOVE.W          D5, D6                     
-    ROL.W           #3, D6
-    MOVE.W          D6, D5
-    ANDI.W          #$0007, D6
-    MULU            #8, D6
-    LEA             THREE_TABLE_2, A0
-    JSR             00(A0,D6) 
-    RTS
-THREE011
-    MOVE.W          D5, D6                     
-    ROL.W           #3, D6
-    MOVE.W          D6, D5
-    ANDI.W          #$0007, D6
-    MULU            #8, D6
-    LEA             THREE_TABLE_2, A0
-    JSR             00(A0,D6) 
-    RTS
-THREE100
-    MOVE.W          D5, D6                     
-    ROL.W           #3, D6
-    MOVE.W          D6, D5
-    ANDI.W          #$0007, D6
-    MULU            #8, D6
-    LEA             THREE_TABLE_2, A0
-    JSR             00(A0,D6) 
-    RTS
-THREE101
-    MOVE.W          D5, D6                     
-    ROL.W           #3, D6
-    MOVE.W          D6, D5
-    ANDI.W          #$0007, D6
-    MULU            #8, D6
-    LEA             THREE_TABLE_2, A0
-    JSR             00(A0,D6) 
-    RTS
-THREE110
-    MOVE.W          D5, D6                     
-    ROL.W           #3, D6
-    MOVE.W          D6, D5
-    ANDI.W          #$0007, D6
-    MULU            #8, D6
-    LEA             THREE_TABLE_2, A0
-    JSR             00(A0,D6) 
-    RTS
-THREE111
-    CMP.W           #$4E75, D7                      * Is this an RTS function
-    BEQ             IS_RTS                          * If so go to the ITSARTS function
-    CMP.W           #$4E71, D7
-    BEQ             IS_NOP
-IS_JSR
-    MOVE.W          D5, D6                     
-    ROL.W           #3, D6
-    MOVE.W          D6, D5
-    ANDI.W          #$0007, D6
-    MULU            #8, D6
-    LEA             THREE_TABLE_2, A0
-    JSR             00(A0,D6)   
-    RTS
-IS_NOP
-    MOVE.B  #'N',(A5)+						* Insert R into output
-    MOVE.B  #'O',(A5)+						* Insert T into output
-    MOVE.B  #'P',(A5)+						* Insert S into output
-    RTS  
-IS_RTS
-    MOVE.B  #'R',(A5)+						* Insert R into output
-    MOVE.B  #'T',(A5)+						* Insert T into output
-    MOVE.B  #'S',(A5)+						* Insert S into output
-    RTS       
-*-------------------------------------------------------------------------------  
-THREE2000
-    MOVE.W      D7,D4
-    ANDI.W      #$0F00,D4
-    CMP.W       #$0200,D4
-    BNE         ERROR
-    MOVE.B      #'C',(A5)+
-    MOVE.B      #'L',(A5)+
-    MOVE.B      #'R',(A5)+
-    MOVE.B      #'.',(A5)+
-    MOVE.B      #'B',(A5)+
-    MOVE.B      #' ',(A5)+
-    MOVE.B      #' ',(A5)+
-    
-    MOVE.W      D5, D6                     
-    ROL.W       #3, D6
-    MOVE.W      D6, D5
-    ANDI.W      #$0007, D6
-    MULU        #6, D6
-    LEA         EA_MODE, A0
-    JSR         00(A0,D6)   
-    RTS
-ERROR
-    ADDI.B      #10,BAD_DATA_SWITCH  
-    RTS
-THREE2001
-    MOVE.W      D7,D4
-    ANDI.W      #$FF00,D4
-    CMP.W       #$4200,D4
-    BNE         ERROR
-
-    MOVE.B      #'C',(A5)+
-    MOVE.B      #'L',(A5)+
-    MOVE.B      #'R',(A5)+
-    MOVE.B      #'.',(A5)+
-    MOVE.B      #'W',(A5)+
-    MOVE.B      #' ',(A5)+
-    MOVE.B      #' ',(A5)+
-    
-    MOVE.W      D5, D6                     
-    ROL.W       #3, D6
-    MOVE.W      D6, D5
-    ANDI.W      #$0007, D6
-    MULU        #6, D6
-    LEA         EA_MODE, A0
-    JSR         00(A0,D6)   
-       
-    RTS
-
-THREE2010
-    MOVE.W      D7, D6
-    
-    ANDI.W      #$FE00, D6
-    CMP.W       #$4200, D6
-    BEQ         IS_CLR
-    CMP.W       #$4E00, D6
-    BNE         ERROR
-    
-    MOVE.B      #'J',(A5)+
-    MOVE.B      #'S',(A5)+
-    MOVE.B      #'R',(A5)+
-    MOVE.B      #' ',(A5)+
-    MOVE.B      #' ',(A5)+    
-    MOVE.B      #' ',(A5)+ 
-    BRA         THREE2010_EA   
-    
-IS_CLR
-    MOVE.B      #'C',(A5)+
-    MOVE.B      #'L',(A5)+
-    MOVE.B      #'R',(A5)+
-    MOVE.B      #'.',(A5)+
-    MOVE.B      #'L',(A5)+
-    MOVE.B      #' ',(A5)+
-    MOVE.B      #' ',(A5)+
-THREE2010_EA    
-    MOVE.W      D5, D6                     
-    ROL.W       #3, D6
-    MOVE.W      D6, D5
-    ANDI.W      #$0007, D6
-    MULU        #6, D6
-    LEA         EA_MODE, A0
-    JSR         00(A0,D6)  
-    RTS
-THREE2011
-    ADDI.B      #10,BAD_DATA_SWITCH
-    RTS
-THREE2100
-    ADDI.B      #10,BAD_DATA_SWITCH
-    RTS
-THREE2101
-    ADDI.B      #10,BAD_DATA_SWITCH
-    RTS
-THREE2110
-    ADDI.B      #10,BAD_DATA_SWITCH
-    RTS
-THREE2111 
-    MOVE.B      #'L',(A5)+
-    MOVE.B      #'E',(A5)+
-    MOVE.B      #'A',(A5)+
-    MOVE.B      #' ',(A5)+
-    MOVE.B      #' ',(A5)+
-    MOVE.B      #' ',(A5)+
-    MOVE.W      D5, D6                     
-    ROL.W       #3, D6
-    MOVE.W      D6, D5
-    ANDI.W      #$0007, D6
-    MULU        #6, D6
-    LEA         EA_MODE, A0
-    JSR         00(A0,D6)  
-    MOVE.B      #',',(A5)+
-    
-    CLR.L       D5
-    MOVE.W      D7, D5
-    ROL.L       #4, D5
-    JSR         EAMODE001 
-    RTS
-
-EAMODE000
-    MOVEM.L     D0-D7,-(SP)
-    MOVE.B      #'D',(A5)+  
-    MOVE.W      D5, D6                     
-    ROL.W       #3, D6
-    MOVE.W      D6, D5
-    ANDI.W      #$0007, D6
-    MULU        #6, D6
-    LEA         REGISTER, A0
-    JSR         00(A0,D6)
-    MOVEM.L     (SP)+,D0-D7
-    RTS   
-EAMODE001
-    MOVEM.L     D0-D7,-(SP)
-    MOVE.B      #'A',(A5)+  
-    MOVE.W      D5, D6                     
-    ROL.W       #3, D6
-    MOVE.W      D6, D5
-    ANDI.W      #$0007, D6
-    MULU        #6, D6
-    LEA         REGISTER, A0
-    JSR         00(A0,D6)
-    MOVEM.L     (SP)+,D0-D7
-    RTS       		
-EAMODE010 
-    MOVEM.L     D0-D7,-(SP)
-    MOVE.B      #'(',(A5)+  
-    MOVE.B      #'A',(A5)+  
-    MOVE.W      D5, D6                     
-    ROL.W       #3, D6
-    MOVE.W      D6, D5
-    ANDI.W      #$0007, D6
-    MULU        #6, D6
-    LEA         REGISTER, A0
-    JSR         00(A0,D6)
-    MOVE.B      #')',(A5)+
-    MOVEM.L     (SP)+,D0-D7
-    RTS		
-EAMODE011
-    MOVEM.L     D0-D7,-(SP) 
-    MOVE.B      #'(',(A5)+  
-    MOVE.B      #'A',(A5)+  
-    MOVE.W      D5, D6                     
-    ROL.W       #3, D6
-    MOVE.W      D6, D5
-    ANDI.W      #$0007, D6
-    MULU        #6, D6
-    LEA         REGISTER, A0
-    JSR         00(A0,D6)
-    MOVE.B      #')',(A5)+
-    MOVE.B      #'+',(A5)+
-    MOVEM.L     (SP)+,D0-D7
-    RTS
-EAMODE100
-    MOVEM.L     D0-D7,-(SP)
-    MOVE.B      #'-',(A5)+
-    MOVE.B      #'(',(A5)+  
-    MOVE.B      #'A',(A5)+  
-    MOVE.W      D5, D6                     
-    ROL.W       #3, D6
-    MOVE.W      D6, D5
-    ANDI.W      #$0007, D6
-    MULU        #6, D6
-    LEA         REGISTER, A0
-    JSR         00(A0,D6)
-    MOVE.B      #')',(A5)+
-    MOVEM.L     (SP)+,D0-D7
-    RTS      		
-EAMODE101
-    ADD.B       #10, BAD_DATA_SWITCH             
-    RTS      		
-EAMODE110
-    ADD.B       #10, BAD_DATA_SWITCH             
-    RTS     		
-EAMODE111
-    MOVEM.L     D0-D7,-(SP)
-    MOVE.W      D5, D6                     
-    ROL.W       #3, D6
-    MOVE.W      D6, D5
-    ANDI.W      #$0007, D6
-    MULU        #6, D6
-    LEA         REGISTER, A0
-    JSR         00(A0,D6)
-    MOVEM.L     (SP)+,D0-D7
-    RTS 		
 **************** MOVEQ *********************************************************************************************************
 OPCODE0111
     MOVE.W      D7, D4
@@ -1396,8 +1051,8 @@ P_IS_MOVEQ
     MULU            #6, D6
     LEA             REGISTER, A0
     JSR             00(A0,D6)
-    RTS
-    ******************* SUB ****************************************************************************
+    RTS 
+******************* SUB ****************************************************************************
 OPCODE1001
     MOVE.W      D7, D4
     ANDI.W      #$01C0, D4 
@@ -1649,6 +1304,7 @@ LOAD_SUB_
     MOVE.B          #'B',(A5)+
     MOVE.B          #'.',(A5)+
     RTS
+        
 ******************* CMP ******************************************************************************************************
 OPCODE1011
     MOVE.B         #'C',(A5)+            
@@ -2602,8 +2258,6 @@ SHIFTER_NUM
     LEA         REGISTER, A0
     JSR         00(A0,D6)
     RTS
-        
-
 ****************** DIVU **********************************************************************************    
 OPCODE1000
     MOVEM.L         D0,-(SP)
@@ -2774,24 +2428,7 @@ EA_100_1000      * #DATA
     RTS 
     
 
-                           
-
- 
-* CLEAR REGISTERS --------------------------------------------------------
-CLEAR_REGISTERS
-        CLR.L   D0
-        CLR.L   D5
-        CLR.L   D2
-        CLR.L   D1
-        CLR.L   D3
-        CLR.L   D4
-        CLR.L   D6
-        MOVE.L  #$00000000,A1
-        MOVE.L  #$00000000,A2
-        MOVE.L  #$00000000,A3
-        MOVE.L  #$00000000,A4
-        MOVE.L  #$00000000,A5
-        RTS
+                             
 * SUB ROUTINES USED FOR MANY OPCODES
 *********************************************************
 EA_MODE
@@ -2813,6 +2450,298 @@ REGISTER
     JMP    REGISTER101      	* Register 101
     JMP    REGISTER110      	* Register 110
     JMP    REGISTER111      	* Register 111
+
+
+* JUMP TABLE SUBROUTINES FOR OPCODE 0100 EXCEPT MOVEM ------------------------  
+THREE000
+    MOVE.W          D5, D6                     
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    ANDI.W          #$0007, D6
+    MULU            #8, D6
+    LEA             THREE_TABLE_2, A0
+    JSR             00(A0,D6) 
+    RTS
+THREE001
+    MOVE.W          D5, D6                     
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    ANDI.W          #$0007, D6
+    MULU            #8, D6
+    LEA             THREE_TABLE_2, A0
+    JSR             00(A0,D6) 
+    RTS    
+THREE010
+    MOVE.W          D5, D6                     
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    ANDI.W          #$0007, D6
+    MULU            #8, D6
+    LEA             THREE_TABLE_2, A0
+    JSR             00(A0,D6) 
+    RTS
+THREE011
+    MOVE.W          D5, D6                     
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    ANDI.W          #$0007, D6
+    MULU            #8, D6
+    LEA             THREE_TABLE_2, A0
+    JSR             00(A0,D6) 
+    RTS
+THREE100
+    MOVE.W          D5, D6                     
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    ANDI.W          #$0007, D6
+    MULU            #8, D6
+    LEA             THREE_TABLE_2, A0
+    JSR             00(A0,D6) 
+    RTS
+THREE101
+    MOVE.W          D5, D6                     
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    ANDI.W          #$0007, D6
+    MULU            #8, D6
+    LEA             THREE_TABLE_2, A0
+    JSR             00(A0,D6) 
+    RTS
+THREE110
+    MOVE.W          D5, D6                     
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    ANDI.W          #$0007, D6
+    MULU            #8, D6
+    LEA             THREE_TABLE_2, A0
+    JSR             00(A0,D6) 
+    RTS
+THREE111
+    CMP.W           #$4E75, D7                      * Is this an RTS function
+    BEQ             IS_RTS                          * If so go to the ITSARTS function
+    CMP.W           #$4E71, D7
+    BEQ             IS_NOP
+IS_JSR
+    MOVE.W          D5, D6                     
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    ANDI.W          #$0007, D6
+    MULU            #8, D6
+    LEA             THREE_TABLE_2, A0
+    JSR             00(A0,D6)   
+    RTS
+IS_NOP
+    MOVE.B  #'N',(A5)+						* Insert R into output
+    MOVE.B  #'O',(A5)+						* Insert T into output
+    MOVE.B  #'P',(A5)+						* Insert S into output
+    RTS  
+IS_RTS
+    MOVE.B  #'R',(A5)+						* Insert R into output
+    MOVE.B  #'T',(A5)+						* Insert T into output
+    MOVE.B  #'S',(A5)+						* Insert S into output
+    RTS       
+*-------------------------------------------------------------------------------  
+THREE2000
+    MOVE.W      D7,D4
+    ANDI.W      #$0F00,D4
+    CMP.W       #$0200,D4
+    BNE         ERROR
+    MOVE.B      #'C',(A5)+
+    MOVE.B      #'L',(A5)+
+    MOVE.B      #'R',(A5)+
+    MOVE.B      #'.',(A5)+
+    MOVE.B      #'B',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    
+    MOVE.W      D5, D6                     
+    ROL.W       #3, D6
+    MOVE.W      D6, D5
+    ANDI.W      #$0007, D6
+    MULU        #6, D6
+    LEA         EA_MODE, A0
+    JSR         00(A0,D6)   
+    RTS
+ERROR
+    ADDI.B      #10,BAD_DATA_SWITCH  
+    RTS
+THREE2001
+    MOVE.W      D7,D4
+    ANDI.W      #$FF00,D4
+    CMP.W       #$4200,D4
+    BNE         ERROR
+
+    MOVE.B      #'C',(A5)+
+    MOVE.B      #'L',(A5)+
+    MOVE.B      #'R',(A5)+
+    MOVE.B      #'.',(A5)+
+    MOVE.B      #'W',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    
+    MOVE.W      D5, D6                     
+    ROL.W       #3, D6
+    MOVE.W      D6, D5
+    ANDI.W      #$0007, D6
+    MULU        #6, D6
+    LEA         EA_MODE, A0
+    JSR         00(A0,D6)   
+       
+    RTS
+
+THREE2010
+    MOVE.W      D7, D6
+    
+    ANDI.W      #$FE00, D6
+    CMP.W       #$4200, D6
+    BEQ         IS_CLR
+    CMP.W       #$4E00, D6
+    BNE         ERROR
+    
+    MOVE.B      #'J',(A5)+
+    MOVE.B      #'S',(A5)+
+    MOVE.B      #'R',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+    
+    MOVE.B      #' ',(A5)+ 
+    BRA         THREE2010_EA   
+    
+IS_CLR
+    MOVE.B      #'C',(A5)+
+    MOVE.B      #'L',(A5)+
+    MOVE.B      #'R',(A5)+
+    MOVE.B      #'.',(A5)+
+    MOVE.B      #'L',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+THREE2010_EA    
+    MOVE.W      D5, D6                     
+    ROL.W       #3, D6
+    MOVE.W      D6, D5
+    ANDI.W      #$0007, D6
+    MULU        #6, D6
+    LEA         EA_MODE, A0
+    JSR         00(A0,D6)  
+    RTS
+THREE2011
+    ADDI.B      #10,BAD_DATA_SWITCH
+    RTS
+THREE2100
+    ADDI.B      #10,BAD_DATA_SWITCH
+    RTS
+THREE2101
+    ADDI.B      #10,BAD_DATA_SWITCH
+    RTS
+THREE2110
+    ADDI.B      #10,BAD_DATA_SWITCH
+    RTS
+THREE2111 
+    MOVE.B      #'L',(A5)+
+    MOVE.B      #'E',(A5)+
+    MOVE.B      #'A',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.W      D5, D6                     
+    ROL.W       #3, D6
+    MOVE.W      D6, D5
+    ANDI.W      #$0007, D6
+    MULU        #6, D6
+    LEA         EA_MODE, A0
+    JSR         00(A0,D6)  
+    MOVE.B      #',',(A5)+
+    
+    CLR.L       D5
+    MOVE.W      D7, D5
+    ROL.L       #4, D5
+    JSR         EAMODE001 
+    RTS
+
+EAMODE000
+    MOVEM.L     D0-D7,-(SP)
+    MOVE.B      #'D',(A5)+  
+    MOVE.W      D5, D6                     
+    ROL.W       #3, D6
+    MOVE.W      D6, D5
+    ANDI.W      #$0007, D6
+    MULU        #6, D6
+    LEA         REGISTER, A0
+    JSR         00(A0,D6)
+    MOVEM.L     (SP)+,D0-D7
+    RTS   
+EAMODE001
+    MOVEM.L     D0-D7,-(SP)
+    MOVE.B      #'A',(A5)+  
+    MOVE.W      D5, D6                     
+    ROL.W       #3, D6
+    MOVE.W      D6, D5
+    ANDI.W      #$0007, D6
+    MULU        #6, D6
+    LEA         REGISTER, A0
+    JSR         00(A0,D6)
+    MOVEM.L     (SP)+,D0-D7
+    RTS       		
+EAMODE010 
+    MOVEM.L     D0-D7,-(SP)
+    MOVE.B      #'(',(A5)+  
+    MOVE.B      #'A',(A5)+  
+    MOVE.W      D5, D6                     
+    ROL.W       #3, D6
+    MOVE.W      D6, D5
+    ANDI.W      #$0007, D6
+    MULU        #6, D6
+    LEA         REGISTER, A0
+    JSR         00(A0,D6)
+    MOVE.B      #')',(A5)+
+    MOVEM.L     (SP)+,D0-D7
+    RTS		
+EAMODE011
+    MOVEM.L     D0-D7,-(SP) 
+    MOVE.B      #'(',(A5)+  
+    MOVE.B      #'A',(A5)+  
+    MOVE.W      D5, D6                     
+    ROL.W       #3, D6
+    MOVE.W      D6, D5
+    ANDI.W      #$0007, D6
+    MULU        #6, D6
+    LEA         REGISTER, A0
+    JSR         00(A0,D6)
+    MOVE.B      #')',(A5)+
+    MOVE.B      #'+',(A5)+
+    MOVEM.L     (SP)+,D0-D7
+    RTS
+EAMODE100
+    MOVEM.L     D0-D7,-(SP)
+    MOVE.B      #'-',(A5)+
+    MOVE.B      #'(',(A5)+  
+    MOVE.B      #'A',(A5)+  
+    MOVE.W      D5, D6                     
+    ROL.W       #3, D6
+    MOVE.W      D6, D5
+    ANDI.W      #$0007, D6
+    MULU        #6, D6
+    LEA         REGISTER, A0
+    JSR         00(A0,D6)
+    MOVE.B      #')',(A5)+
+    MOVEM.L     (SP)+,D0-D7
+    RTS      		
+EAMODE101
+    ADD.B       #10, BAD_DATA_SWITCH             
+    RTS      		
+EAMODE110
+    ADD.B       #10, BAD_DATA_SWITCH             
+    RTS     		
+EAMODE111
+    MOVEM.L     D0-D7,-(SP)
+    MOVE.W      D5, D6                     
+    ROL.W       #3, D6
+    MOVE.W      D6, D5
+    ANDI.W      #$0007, D6
+    MULU        #6, D6
+    LEA         REGISTER, A0
+    JSR         00(A0,D6)
+    MOVEM.L     (SP)+,D0-D7
+    RTS 		
 * Registers ------------------------------------------------
 REGISTER000
     MOVE.W      D5, D6                     
@@ -2903,6 +2832,54 @@ REGISTER111
     MOVE.B      #'7',(A5)+
     RTS
 *---------------------------------------------------------------
+
+
+********************************************************************************************
+* PRINT CURRENT ADDRESS IN ASCII -----------------------------------------
+PRINT_CURRENT_ADD
+        MOVE.L      A6,D2                       * Move current address into D2
+        MOVE.B      #0,D5                       * Set counter to read all hex
+        MOVE.B      #8,D6                       
+CONVERT_HEX_ASCII
+        CMP.B       D5,D6                       * Check if last hex character is read
+        BNE         SET_COUNTER_4               * Set counter to read 4 bits
+        MOVE.B      #6, D0
+        MOVE.B      #32, D1
+        TRAP        #15
+        TRAP        #15
+        TRAP        #15
+        RTS
+SET_COUNTER_4
+        MOVE.B      #0,D3                       
+        MOVE.B      #4,D4    
+Loop
+        CMP.B       D3,D4                       * Read one character at a time
+        BEQ         STORE_ONE_CHAR
+        LSL.L       #1,D2
+        BCC         ADDZERO
+        ADDI.B      #1,D1
+        BRA         INCREMENT_BIT_LOOP
+ADDZERO
+        ADDI.B      #0,D1
+INCREMENT_BIT_LOOP
+        ADDI.B      #1,D3
+        LSL.L       #1,D1
+        BRA         Loop
+STORE_ONE_CHAR                                   * Store hex character
+        LSR.L       #1,D1
+        CMP.B       #$A,D1
+        BLT         HEX_TO_ASCII_NUMBER
+        ADDI.B      #$37,D1                     * HEX_TO_ASCII_LETTER
+        BRA         INCREMENT_NEXT_HEX_LOOP
+HEX_TO_ASCII_NUMBER
+        ADDI.B      #$30,D1
+INCREMENT_NEXT_HEX_LOOP
+        ADDI.B      #1,D5
+        MOVE.B      #6,D0
+        TRAP        #15
+        CLR.L       D1
+        BRA         CONVERT_HEX_ASCII
+
 ******************* USER_RESPONSE **********************************************************************
 * Expect:       DO, D1, A1 to be empty
 * Prompt User for Enter, R, or Q -----------------------------------------
@@ -2941,6 +2918,25 @@ RESTART
         BRA         START
         
 ********************************************************************************************
+* CLEAR REGISTERS --------------------------------------------------------
+CLEAR_REGISTERS
+        CLR.L   D0
+        CLR.L   D5
+        CLR.L   D2
+        CLR.L   D1
+        CLR.L   D3
+        CLR.L   D4
+        CLR.L   D6
+        MOVE.L  #$00000000,A1
+        MOVE.L  #$00000000,A2
+        MOVE.L  #$00000000,A3
+        MOVE.L  #$00000000,A4
+        MOVE.L  #$00000000,A5
+        RTS
+
+********************************************************************************************
+********************************************************************************************
+********************************************************************************************
 END_PROGRAM_MSG
         LEA         RESTART_PROGRAM_MSG, A1            * Load the prompt message
         MOVE.B      #14,D0
@@ -2960,7 +2956,13 @@ END_PROGRAM_MSG
         
 END_PROGRAM
         JSR         CLEAR_SCREEN        
-        SIMHALT             ; halt simulator      
+        SIMHALT             ; halt simulator
+********************************************************************************************
+********************************************************************************************
+********************************************************************************************
+
+
+
 *---------------------------------------------------------------------
 *Variable
 *---------------------------------------------------------------------
@@ -3001,6 +3003,7 @@ ERRM         DC.B     'Enter Valid hexadecimal value: ',0
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
 
 
 
