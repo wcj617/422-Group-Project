@@ -1,8 +1,8 @@
 ********************************************************************************************
 * Title:        68K Disassembler
-* Written by :  Hoa, Tenzin Khando, Marco F.
-* Date       :  
-* Description:  Awesome 68k disassembler 
+* Written by :  David Woo, Stephen Swetonic, Josh Kweon
+* Date       :  11/30/21
+* Description:  Program to decode 68K binaries and write to the console
 ********************************************************************************************
     ORG    $400
 START:  
@@ -515,13 +515,21 @@ OPCODE0001
     MOVE.B          #' ',(A5)+     
     MOVE.B          #' ',(A5)+     
  
+********|||||||||||||||||||||||||||||||||||
 OPCODE_MOVE_DECODER    *** Do Source ***
+    * Check if dest is An first
+    MOVE.W          D7,D4
+    ANDI.W          #$01C0, D4
+    CMP.W           #$0040,D4
+    BEQ             MOVEA_PRINT
+
+
     MOVE.W          D7, D4
     ANDI.W          #$0038, D4
     CMP.W           #$0000, D4
     BEQ             DN_CASE_0001
-    CMP.W           #$0001, D4
-    BEQ             AN_CASE_0001
+    CMP.W           #$0008, D4
+    BEQ             AN_CASE_0001        
     CMP.W           #$0010, D4
     BEQ             ABSOLUTE_AN_CASE_0001
     CMP.W           #$0018, D4
@@ -541,6 +549,8 @@ C_OPCODE0001
     ANDI.W          #$01C0, D4
     CMP.W           #$0000, D4
     BEQ             DESTINATION_DN_CASE_0001
+    CMP.W           #$0040,D4
+    BEQ             DESTINATION_AN_CASE_0001
     CMP.W           #$0080, D4
     BEQ             DESTINATION_ABSOLUTE_AN_0001
     CMP.W           #$00C0, D4
@@ -553,6 +563,7 @@ C_OPCODE0001
     RTS
    
 DN_CASE_0001   
+    JSR             MOVE_CHECK_SIZE
     MOVE.B          #'D',(A5)+
     MOVE.W          D7, D4
     ANDI.W          #$0007, D4
@@ -565,7 +576,8 @@ DN_CASE_0001
     LEA             REGISTER, A0
     JSR             00(A0,D6)     
     BRA             C_OPCODE0001
-AN_CASE_0001   
+AN_CASE_0001  
+    JSR             MOVE_CHECK_SIZE
     MOVE.B          #'A',(A5)+
     MOVE.W          D7, D4
     ANDI.W          #$0007, D4
@@ -579,6 +591,7 @@ AN_CASE_0001
     JSR             00(A0,D6)     
     BRA             C_OPCODE0001
 ABSOLUTE_AN_CASE_0001
+    JSR             MOVE_CHECK_SIZE
     MOVE.B          #'(',(A5)+
     MOVE.B          #'A',(A5)+
     MOVE.W          D7, D4
@@ -594,6 +607,7 @@ ABSOLUTE_AN_CASE_0001
     MOVE.B          #')',(A5)+
     BRA             C_OPCODE0001
 INCREMENT_AN_CASE_0001
+    JSR             MOVE_CHECK_SIZE
     MOVE.B          #'(',(A5)+
     MOVE.B          #'A',(A5)+
     MOVE.W          D7, D4
@@ -610,6 +624,7 @@ INCREMENT_AN_CASE_0001
     MOVE.B          #'+',(A5)+
     BRA             C_OPCODE0001
 DECREMENT_AN_CASE_0001
+    JSR             MOVE_CHECK_SIZE
     MOVE.B          #'-',(A5)+
     MOVE.B          #'(',(A5)+
     MOVE.B          #'A',(A5)+
@@ -625,7 +640,8 @@ DECREMENT_AN_CASE_0001
     JSR             00(A0,D6)
     MOVE.B          #')',(A5)+
     BRA             C_OPCODE0001
-EA_CASE_0001 
+EA_CASE_0001
+    JSR             MOVE_CHECK_SIZE 
     MOVE.W          D7, D4
     ANDI.W          #$0007, D4
     CMP.W           #$0000, D4
@@ -640,6 +656,16 @@ EA_CASE_0001
         *** Destination ***
 DESTINATION_DN_CASE_0001   
     MOVE.B          #'D',(A5)+
+    MOVE.W          D7, D4
+    ROL.W           #7,D4
+    ANDI.W          #$0007, D4
+    MOVE.W          D4, D6
+    MULU            #6, D6
+    LEA             REGISTER, A0
+    JSR             00(A0,D6)     
+    RTS
+DESTINATION_AN_CASE_0001
+    MOVE.B          #'A',(A5)+
     MOVE.W          D7, D4
     ROL.W           #7,D4
     ANDI.W          #$0007, D4
@@ -747,29 +773,56 @@ DEA_001_CASE_0001
     RTS
 
 ******************* MOVE.L *****************************************************************************
+*** Check if this is a MOVEA before printing
 OPCODE0010
     MOVE.B          #'M',(A5)+
     MOVE.B          #'O',(A5)+
     MOVE.B          #'V',(A5)+
     MOVE.B          #'E',(A5)+
-    MOVE.B          #'.',(A5)+
-    MOVE.B          #'L',(A5)+ 
-    MOVE.B          #' ',(A5)+     
-    MOVE.B          #' ',(A5)+     
-    MOVE.B          #' ',(A5)+
-    BRA             OPCODE_MOVE_DECODER     
+    BRA             OPCODE_MOVE_DECODER 
+   
 ******************* MOVE.W ****************************************************************************
 OPCODE0011
     MOVE.B          #'M',(A5)+
     MOVE.B          #'O',(A5)+
     MOVE.B          #'V',(A5)+
     MOVE.B          #'E',(A5)+
+    BRA             OPCODE_MOVE_DECODER 
+
+    
+***************|||||||||||||||||||||||||||
+MOVE_CHECK_SIZE
+    MOVE.W          D5,D3
+    AND.W           #$0003,D3
+    CMP.W           #$0002,D3
+    BEQ             REST_OF_MOVEL
+    CMP.W           #$0003,D3
+    BEQ             REST_OF_MOVEW
+    RTS
+
+MOVEA_PRINT
+    MOVE.B          #'A',(A5)+
+    JSR             MOVE_CHECK_SIZE
+    RTS
+   
+
+REST_OF_MOVEL
+    MOVE.B          #'.',(A5)+
+    MOVE.B          #'L',(A5)+ 
+    MOVE.B          #' ',(A5)+     
+    MOVE.B          #' ',(A5)+     
+    MOVE.B          #' ',(A5)+
+    RTS  
+
+REST_OF_MOVEW
     MOVE.B          #'.',(A5)+
     MOVE.B          #'W',(A5)+ 
     MOVE.B          #' ',(A5)+     
     MOVE.B          #' ',(A5)+     
     MOVE.B          #' ',(A5)+
-    BRA             OPCODE_MOVE_DECODER 
+    RTS
+
+
 ******************* JSR RTS NOP LEA CLR MOVEM****************************************************************************    
 OPCODE0100
     * CHECK IF MOVEM
@@ -3057,6 +3110,8 @@ ENDING_ADD      DS.L    1
 PRINTER         DC.L    1
         
         END    START
+
+
 
 
 

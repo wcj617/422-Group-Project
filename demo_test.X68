@@ -8,7 +8,7 @@
 *
 *****************************
 
-start		EQU	$00009000	* ORG and END address
+start		EQU	$00070000	* ORG and END address
 
 * ORG the program so that it straddles the address boundary $00007FFF to $00008000
 
@@ -150,6 +150,7 @@ label3
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
