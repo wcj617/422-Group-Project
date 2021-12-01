@@ -1,9 +1,12 @@
-********************************************************************************************
-* Title:        68K Disassembler
-* Written by :  Hoa, Tenzin Khando, Marco F.
-* Date       :  
-* Description:  Awesome 68k disassembler 
-********************************************************************************************
+*-----------------------------------------------------------
+* Title      :Group Project    
+* Written by :David Woo, Stephen Swetonic
+* Date       :11/7/2021 
+* Description:
+*-----------------------------------------------------------
+*   Main program
+*--------------------------------------------------------------------
+
     ORG    $400
 START:  
         LEA         GREETING, A1                * Load the greeting and notes for address
@@ -3057,6 +3060,7 @@ ENDING_ADD      DS.L    1
 PRINTER         DC.L    1
         
         END    START
+
 
 
 
