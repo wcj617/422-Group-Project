@@ -46,7 +46,7 @@ AtoH    MOVE.B      (A1)+,D6        * move user input data from (A1) to D6
         SUBI.B      #$30,D6
         BRA         AddressCounting
 
-ERR     LEA         ERRM,A1
+ERR     LEA         INVALIDSADDR,A1
         MOVE.B      #14,D0  
         TRAP        #15    
         BRA         InputS   
@@ -77,6 +77,18 @@ StartingAd        SUBI.B  #1,D4
 ** Addr2 now contains the starting address
 EndingAd          MOVE.L  D5,Addr2                            
                   MOVE.L  Addr1,A6
+                 CLR.L       D5
+                 JSR         CLEAR_SCREEN
+                 BRA         ADDR_LOOP
+
+
+
+  
+        
+        
+***********************************************************************************
+
+
                   
 ** Use A6 for current address?
 ** Compare starting and ending addresses -------------------------------
@@ -2992,7 +3004,14 @@ MessageSt       DC.B         'Enter the starting address: ',0
 
 MessageEn       DC.B         'Enter the Ending address: ',0 
 
-ERRM         DC.B     'Enter Valid hexadecimal value: ',0
+INVALIDSADDR    DC.B     'Enter Valid hexadecimal value: ',0
+
+ERRORINPUTSIZE      DC.B    'ERROR: INVALID ADDRESS SIZE',CR,LF,CR,LF,0
+INVALIDCHAR         DC.B    'ERROR: INVALID ADDRESS CHARACTER',CR,LF,CR,LF,0
+SGTEM               DC.B    'ERROR: STARTING ADDRESS > ENDING ADDRESS',CR,LF,CR,LF,0
+ODD_ADD_MSG         DC.B    'ERROR: ODD ADDRESS',CR,LF,CR,LF,0
+STARTING_ADDR_7     DC.B    'ERROR: Invalid starting adress - must be greater than 7000',CR,LF,CR,LF,0
+
 *---------------------------------------------------------------------          
     END    START        ; last line of source
 
