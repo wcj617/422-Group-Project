@@ -763,16 +763,39 @@ DEA_001_CASE_0001
 
 ******************* MOVE.L *****************************************************************************
 OPCODE0010
-    MOVE.B          #'M',(A5)+
-    MOVE.B          #'O',(A5)+
-    MOVE.B          #'V',(A5)+
-    MOVE.B          #'E',(A5)+
-    MOVE.B          #'.',(A5)+
-    MOVE.B          #'L',(A5)+ 
-    MOVE.B          #' ',(A5)+     
-    MOVE.B          #' ',(A5)+     
-    MOVE.B          #' ',(A5)+
-    BRA             OPCODE_MOVE_DECODER     
+
+    MOVE.W           D7,D4        
+    ANDI.W           #$01C0,D4
+    *OPMODE FOR MOVEA  
+     CMP.W            #$0040,D4
+    BEQ              LOAD_MOVEA_L  
+    BRA              LOAD_MOVE_L      
+
+LOAD_MOVE_L     
+               MOVE.B          #'M',(A5)+   
+               MOVE.B          #'O',(A5)+
+               MOVE.B          #'V',(A5)+
+               MOVE.B          #'E',(A5)+
+               MOVE.B          #'.',(A5)+
+               MOVE.B          #'L',(A5)+ 
+               MOVE.B          #' ',(A5)+     
+               MOVE.B          #' ',(A5)+     
+               MOVE.B          #' ',(A5)+
+               BRA             OPCODE_MOVE_DECODER
+
+LOAD_MOVEA_L     
+               MOVE.B          #'M',(A5)+  
+               MOVE.B          #'O',(A5)+
+               MOVE.B          #'V',(A5)+
+               MOVE.B          #'E',(A5)+
+               MOVE.B          #'A',(A5)+
+               MOVE.B          #'.',(A5)+
+               MOVE.B          #'L',(A5)+ 
+               MOVE.B          #' ',(A5)+     
+               MOVE.B          #' ',(A5)+     
+               MOVE.B          #' ',(A5)+
+               BRA             OPCODE_MOVE_DECODER
+    
 ******************* MOVE.W ****************************************************************************
 OPCODE0011
               MOVE.W           D7,D4        
@@ -3094,6 +3117,7 @@ ENDING_ADD      DS.L    1
 PRINTER         DC.L    1
         
         END    START
+
 
 
 
