@@ -7,7 +7,7 @@
 *   Main program
 *--------------------------------------------------------------------
 
-    ORG    $400
+    ORG    $1000    
 START:  
         LEA         GREETING, A1                * Load the greeting and notes for address
         MOVE.B      #14,D0
@@ -266,9 +266,9 @@ OPCODE_JMP_TABLE
     RTS
     JSR     OPCODE0001                           * - MOVE.B 
     RTS
-    JSR     OPCODE0010                           * - MOVE.L
+    JSR     OPCODE0010                           * - MOVE.L,MOVEA.L 
     RTS
-    JSR     OPCODE0011                           * - MOVE.W
+    JSR     OPCODE0011                           * - MOVE.W,MOVEA.W 
     RTS
     JSR     OPCODE0100                           * - MOVEM, LEA, JSR, CLR, RTS, NOP
     RTS
@@ -763,17 +763,39 @@ OPCODE0010
     BRA             OPCODE_MOVE_DECODER     
 ******************* MOVE.W ****************************************************************************
 OPCODE0011
-    MOVE.B          #'M',(A5)+
-    MOVE.B          #'O',(A5)+
-    MOVE.B          #'V',(A5)+
-    MOVE.B          #'E',(A5)+
-    MOVE.B          #'.',(A5)+
-    MOVE.B          #'W',(A5)+ 
-    MOVE.B          #' ',(A5)+     
-    MOVE.B          #' ',(A5)+     
-    MOVE.B          #' ',(A5)+
-    BRA             OPCODE_MOVE_DECODER 
-******************* JSR RTS NOP LEA CLR MOVEM****************************************************************************    
+              MOVE.W           D7,D4        
+              ANDI.W           #$01C0,D4
+              *OPMODE FOR MOVEA  
+              CMP.W            #$0040,D4
+              BEQ              LOAD_MOVEA_W
+              BRA              LOAD_MOVE_W       
+
+LOAD_MOVE_W    
+                          MOVE.B                 #'M',(A5)+   
+               MOVE.B          #'O',(A5)+
+               MOVE.B          #'V',(A5)+
+               MOVE.B          #'E',(A5)+
+               MOVE.B          #'.',(A5)+
+               MOVE.B          #'W',(A5)+ 
+               MOVE.B          #' ',(A5)+     
+               MOVE.B          #' ',(A5)+     
+               MOVE.B          #' ',(A5)+
+               BRA             OPCODE_MOVE_DECODER
+
+LOAD_MOVEA_W 
+               MOVE.B          #'M',(A5)+  
+               MOVE.B          #'O',(A5)+
+               MOVE.B          #'V',(A5)+
+               MOVE.B          #'E',(A5)+
+               MOVE.B          #'A',(A5)+
+               MOVE.B          #'.',(A5)+
+               MOVE.B          #'W',(A5)+ 
+               MOVE.B          #' ',(A5)+     
+               MOVE.B          #' ',(A5)+     
+               MOVE.B          #' ',(A5)+
+               BRA             OPCODE_MOVE_DECODER
+
+******************* JSR RTS NOP LEA CLR MOVEM****************************************************************************       
 OPCODE0100
     * CHECK IF MOVEM
     MOVE.W          D7,D4
