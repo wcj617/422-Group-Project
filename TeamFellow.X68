@@ -523,7 +523,7 @@ OPCODE_MOVE_DECODER    *** Do Source ***
     ANDI.W          #$0038, D4
     CMP.W           #$0000, D4
     BEQ             DN_CASE_0001
-    CMP.W           #$0001, D4
+    CMP.W           #$0008, D4
     BEQ             AN_CASE_0001
     CMP.W           #$0010, D4
     BEQ             ABSOLUTE_AN_CASE_0001
@@ -544,6 +544,8 @@ C_OPCODE0001
     ANDI.W          #$01C0, D4
     CMP.W           #$0000, D4
     BEQ             DESTINATION_DN_CASE_0001
+    CMP.W           #$0040, D4
+    BEQ             DESTINATION_AN_0001
     CMP.W           #$0080, D4
     BEQ             DESTINATION_ABSOLUTE_AN_0001
     CMP.W           #$00C0, D4
@@ -650,6 +652,16 @@ DESTINATION_DN_CASE_0001
     MULU            #6, D6
     LEA             REGISTER, A0
     JSR             00(A0,D6)     
+    RTS
+DESTINATION_AN_0001
+    MOVE.B          #'A',(A5)+
+    MOVE.W          D7, D4
+    ROL.W           #7,D4
+    ANDI.W          #$0007, D4
+    MOVE.W          D4, D6
+    MULU            #6, D6
+    LEA             REGISTER, A0
+    JSR             00(A0,D6)
     RTS
 DESTINATION_ABSOLUTE_AN_0001
     MOVE.B          #'(',(A5)+
