@@ -1,18 +1,21 @@
 *-----------------------------------------------------------
 * Title      :Group Project    
-* Written by :David Woo, Stephen Swetonic
-* Date       :11/7/2021 
-* Description:
+* Written by :David Woo, Stephen Swetonic, Laurence Monson, Josh Kweon
+* Date       :12/4/2021 
+* Description:Program that accepts a starting and ending address from the user,
+*             Scans through instructions stored at those addresses, and prints
+*             the dissasembled code line by line. After 25 lines have been printed,
+*             allows the user to continue, restart, or end the program
 *-----------------------------------------------------------
 *   Main program
 *--------------------------------------------------------------------
 
-    ORG    $1000    
-START:  
-        LEA         GREETING, A1                * Load the greeting and notes for address
+    ORG $1000
+START: 
+        LEA GREETING, A1               * Load the greeting and notes for address
         MOVE.B      #14,D0
         TRAP        #15 
-   		MOVE.B      #0, LINE_COUNTER            * SET Default values for a line counter and a bad data switch
+   		MOVE.B      #0, LINE_COUNTER            * SET Defauld a bad data switch
         MOVE.B      #0, BAD_DATA_SWITCH     
 
 ********************************************************************************************
@@ -2974,15 +2977,16 @@ SGTEM               DC.B    'ERROR: STARTING ADDRESS > ENDING ADDRESS',CR,LF,CR,
 ODD_ADD_MSG         DC.B    'ERROR: ODD ADDRESS',CR,LF,CR,LF,0
 STARTING_ADDR_7     DC.B    'ERROR: Invalid starting adress - must be greater than 7000',CR,LF,CR,LF,0
 * VARIABLES --------------------------------------------------------------------------------------------
-LINE_COUNTER      DS.L    1
-BAD_DATA_SWITCH DS.L    1    
-SIZE            DS.B    1
+LINE_COUNTER      DS.L    1 *holds the line number of the instruction, up to a maximum of 25 on a screen
+BAD_DATA_SWITCH DS.L    1   * Stores 10 if the current opcode is bad data, switches addr_loop to print bad data 
+SIZE            DS.B    1   *Seemingly unused variable
 INPUT_HEX       DS.L    1   * Use to temp hold starting and ending address
-STARTING_ADD    DS.L    1   * 1 is the size, if I change to 4 then array size changes
-ENDING_ADD      DS.L    1
-PRINTER         DC.L    1
+STARTING_ADD    DS.L    1   *Used to store the starting address input by user * 1 is the size, if I change to 4 then array size changes
+ENDING_ADD      DS.L    1   *Used to store ending address input by user
+PRINTER         DC.L    1   *Stores characters to be printed on the screen
         
         END    START
+
 
 
 
