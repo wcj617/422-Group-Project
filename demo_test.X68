@@ -15,6 +15,7 @@ start		EQU	$00009000	* ORG and END address
 		ORG	start
 
 NOP
+    ADDQ.W  #1,D1        
     RTS
     NOP
     RTS
@@ -150,6 +151,7 @@ label3
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

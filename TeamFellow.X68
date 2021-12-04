@@ -844,8 +844,8 @@ OPCODE0100
 ******************* ADDQ ****************************************************************************
 OPCODE0101    
     MOVE.W          D7, D4
-    ANDI.W          #$0600, D4
-    CMP.W           #$0600, D4
+    ANDI.W          #$0100, D4
+    CMP.W           #$0000, D4
     BEQ             C_OPCODE0101
     ADD.B           #10, BAD_DATA_SWITCH             
     RTS
@@ -1001,7 +1001,7 @@ EA_0010_CASE
     MOVE.B      #8,D3
     JSR         LONG_ASCII  
     RTS  
-    
+       
  
 
 
