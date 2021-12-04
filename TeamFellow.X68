@@ -874,7 +874,7 @@ ADDI_B_0101
     MOVE.W          (A6)+, D5
     MOVE.B          #0 , D6
     MOVE.B          #4, D3
-    JSR             WORD_ASCII
+    JSR             WORD_0101
     *MOVE.W          D4, (A5)+
     BRA             C2_OPCODE0101
 ADDI_W_0101
@@ -886,7 +886,7 @@ ADDI_W_0101
     MOVE.W          (A6)+, D5
     MOVE.B          #0 , D6
     MOVE.B          #4, D3
-    JSR             WORD_ASCII
+    JSR             WORD_0101
     *MOVE.W          D4, (A5)+ 
     BRA             C2_OPCODE0101
 ADDI_L_0101
@@ -899,7 +899,7 @@ ADDI_L_0101
     MOVE.L          (A6)+, D5
     MOVE.B          #0 , D6
     MOVE.B          #4, D3
-    JSR             WORD_ASCII
+    JSR             WORD_0101
     *MOVE.W          D4, (A5)+ 
     BRA             C2_OPCODE0101
 C2_OPCODE0101
@@ -1001,8 +1001,53 @@ EA_0010_CASE
     MOVE.B      #8,D3
     JSR         LONG_ASCII  
     RTS  
+WORD_0101                      	
+    MOVE.W          D7, D4
+    ANDI.W          #$0E00, D4
+    CMP.W           #$0000, D4
+    BEQ             DATA_8 *8
+    CMP.W           #$0200, D4
+    BEQ             DATA_1 * 1
+    CMP.W           #$0400, D4
+    BEQ             DATA_2  * 2
+    CMP.W           #$0600, D4
+    BEQ             DATA_3  *3
+    CMP.W           #$0800, D4
+    BEQ             DATA_4 *4
+    CMP.W           #$0A00, D4
+    BEQ             DATA_5  *5
+    CMP.W           #$0C00, D4
+    BEQ             DATA_6 *6
+    CMP.W           #$0E00, D4
+    BEQ             DATA_7 *7
+    ADD.B           #10, BAD_DATA_SWITCH  
+    RTS
        
- 
+DATA_8
+    MOVE.B          #'8',(A5)+
+    RTS 
+DATA_1
+    MOVE.B          #'1',(A5)+
+    RTS
+DATA_2
+    MOVE.B          #'2',(A5)+
+    RTS
+DATA_3
+    MOVE.B          #'3',(A5)+
+    RTS
+DATA_4
+    MOVE.B          #'4',(A5)+
+    RTS
+DATA_5
+    MOVE.B          #'5',(A5)+
+    RTS
+DATA_6
+    MOVE.B          #'6',(A5)+
+    RTS
+DATA_7
+    MOVE.B          #'7',(A5)+
+    RTS
+
 
 
 ******************* BCC, BLE, BGT ****************************************************************************
