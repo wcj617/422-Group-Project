@@ -1,8 +1,11 @@
 *-----------------------------------------------------------
 * Title      :Group Project    
-* Written by :David Woo, Stephen Swetonic
-* Date       :11/7/2021 
-* Description:
+* Written by :David Woo, Stephen Swetonic, Josh Kweon, Laurence Monson
+* Date       :12/4/2021 
+* Description:Program that accepts a starting and ending address from the user,
+*             Scans through instructions stored at those addresses, and prints
+*             the dissasembled code line by line. After 25 lines have been printed,
+*             allows the user to continue, restart, or end the program
 *-----------------------------------------------------------
 *   Main program
 *--------------------------------------------------------------------
@@ -2973,15 +2976,16 @@ ERROR_STRTGEND               DC.B    'ERROR: STARTING ADDRESS > ENDING ADDRESS',
 ERROR_ODDADDR         DC.B    'ERROR: ODD ADDRESS',CR,LF,CR,LF,0
 ERROR_SADDR_POINT     DC.B    'ERROR: Invalid starting adress - must be greater than 7000',CR,LF,CR,LF,0
 * VARIABLES --------------------------------------------------------------------------------------------
-LINE_COUNTERS      DS.L    1
-BAD_DATA_  DS.L    1    
-SIZE            DS.B    1
+LINE_COUNTERS      DS.L    1 *holds line number of the instruction, up to a maximum of 25 on a screen
+BAD_DATA_  DS.L    1         * stores whether or not the current opcode is bad data, switches addr_loop to print bad data
+SIZE            DS.B    1 
 INPUT_HEX       DS.L    1   * Use to temp hold starting and ending address
-START_ADDR    DS.L    1   * 1 is the size, if I change to 4 then array size changes
-END_ADDR      DS.L    1
-PROGRAM_PRINTER         DC.L    1
+START_ADDR    DS.L    1   *Used to store starting address * 1 is the size, if I change to 4 then array size changes
+END_ADDR      DS.L    1   *Used to store ending address
+PROGRAM_PRINTER         DC.L    1 * used to store characters to print on the screen
         
         END    START
+
 
 
 
