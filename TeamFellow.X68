@@ -145,7 +145,10 @@ SGTE                                            * Starting greater then ending
   
         
 ********************************************************************************************
-* OPCODE READ ------------------------------------------------------------
+* OPCODE READ (Main program loop) ---------------------------------------------------------
+*** While the current address is not equal to the ending address, print current address,
+*** attempt to decode the instruction, then print the resulting characters in the printer
+*** buffer.
 
 * Compare Current Address to Ending Adddres ------------------------------ 
 ADDR_LOOP
@@ -155,7 +158,7 @@ ADDR_LOOP
         BGT         END_PROGRAM_MSG    
 
         MOVE.L      #$00000000, A5
-        CMP.B       #25, LINE_COUNTER           * Check line counter
+        CMP.B       #25, LINE_COUNTER           * Check line counter. Allow for 25 lines on the screen at a time
         BNE         CONTINUE_ADDR_LOOP
         JSR         USER_RESPONSE         
 CONTINUE_ADDR_LOOP        
@@ -165,7 +168,8 @@ CONTINUE_ADDR_LOOP
         
         LEA         PRINTER, A5                  
         MOVE.W      (A6)+, D7
-        JSR         FILL_Printer                * FILL Printer
+        JSR         FILL_Printer                * Decode the instruction at the current address, resulting characters will be in memory 
+                                                * starting at $0 until a #$00 terminator
         
         CMP.B       #10, BAD_DATA_SWITCH        * Check if Bad Data Switch is True
         BEQ         PRINT_BAD_DATA  
@@ -184,12 +188,12 @@ PRINT_BAD_DATA
         LEA         PRINTER,A1		            * Load printer
         MOVEQ       #13,D0				        
         TRAP        #15		
-        MOVE.B      #$00, BAD_DATA_SWITCH       * Reset SWITCH  
+        MOVE.B      #$00, BAD_DATA_SWITCH       * Reset bad data switch 
         BRA         ADDR_LOOP		            * Continue reading opcodes
         
 * BAD DATA PRINTER -----------------------------------------------------
 BAD_DATA
-        MOVE.B      #'B',(A5)+			        * SET UP 'BAD DATA'
+        MOVE.B      #'B',(A5)+			        
         MOVE.B	    #'A',(A5)+			
         MOVE.B	    #'D',(A5)+			
         MOVE.B	    #' ',(A5)+			
@@ -208,27 +212,29 @@ BAD_DATA
         BRA         WORD_ASCII                  * ALWAYS branch to Word to ASCII convertion
         
 * NOTE: D5 is use to load whatever you want to convert to ASCII
-*     : D6, d3 are the variable for the counter
-* WORD TO ASCII
+*     : D6, D3 are the variables used for the counter
+* WORD TO ASCII ------------------------------------------------------------------------------
+** Converts a word memory value to ascii characters
 WORD_ASCII                      	
-    	ROL.W       #4,D5                       * ROL 4 Bits to get load it to d4       	       
+    	ROL.W       #4,D5                       * ROL 4 times to move those 4 bits to the right      	       
     	MOVE.L      D5,D4               	        
-    	ANDI.L      #$0000000F,D4               * Mask evertying except the 4 bits at the left     	        
-    	CMPI.B      #$09,D4             	    * Check is number or letter        
+    	ANDI.L      #$0000000F,D4               * Mask everything except the 4 bits at the left     	        
+    	CMPI.B      #$09,D4             	    * Check if this is a number or letter        
     	BLE         IS_NUM                          
     	ADDI.B      #$37,D4                        
     	BRA         IS_LET
-IS_NUM                                          * ADD 30 to D4 if num         
+IS_NUM                                          * ADD 30 to D4 if this is a number         
         ADDI.B      #$30,D4           	        
     	BRA         IS_LET
 IS_LET
-    	ADDI.B      #1,D6               	    * ADD 30 to D4 if letter   
+    	ADDI.B      #1,D6               	    * ADD 30 to D4 if this is a letter   
     	MOVE.B      D4,(A5)+            	       
     	CMP.B       D3,D6               	
     	BLT         WORD_ASCII                 
     	RTS
     	
-* LONG TO ASCII    	
+* LONG TO ASCII
+** Converts a word memory value to ascii characters
 LONG_ASCII                      	
     	ROL.L       #4,D5               	        
     	MOVE.L      D5,D4               	        
@@ -250,13 +256,15 @@ IS_LET_L
     	
 * GO TO OPCODE AND FILL PRINTER -------------------------------------
 FILL_Printer
-        MOVE.W      D7, D6                          
+        MOVE.W      D7, D6                          * D7 Contains the original opcode word
         ROL.W       #4, D6				            
-        MOVE.W      D6, D5
-        LEA         OPCODE_JMP_TABLE, A0      	    
-        ANDI.W      #$000F, D6
-        MULU        #8, D6             	            
-        JSR         0(A0,D6)          	            
+        MOVE.W      D6, D5                          * D5 contains the opcode with the 1st 4 bits rotated left
+        LEA         OPCODE_JMP_TABLE, A0      	    * Load the starting address of the Jump Table
+        ANDI.W      #$000F, D6                      * Mask to retain only the rotated bits in D6
+        MULU        #8, D6             	            * Multiply the 4 bits in D6 by 8, which is the "stride" distance between
+                                                    * locations in the Jump Table.
+        JSR         0(A0,D6)          	            * Calculates the jump address dynamically by using the index offset addressing mode
+                                                    * The offset D6 is added to the start of the Jump Table at A0
         RTS        
 
 ********************************************************************************************
@@ -266,11 +274,11 @@ OPCODE_JMP_TABLE
     RTS
     JSR     OPCODE0001                           * - MOVE.B 
     RTS
-    JSR     OPCODE0010                           * - MOVE.L,MOVEA.L 
+    JSR     OPCODE0010                           * - MOVE.L, MOVEA.L 
     RTS
-    JSR     OPCODE0011                           * - MOVE.W,MOVEA.W 
+    JSR     OPCODE0011                           * - MOVE.W, MOVEA.W 
     RTS
-    JSR     OPCODE0100                           * - MOVEM, LEA, JSR, CLR, RTS, NOP
+    JSR     OPCODE0100                           * - JSR, RTS, NOP
     RTS
     JSR     OPCODE0101                           * - BAD DATA ----------------------------------   
     RTS   
@@ -278,7 +286,7 @@ OPCODE_JMP_TABLE
     RTS
     JSR     OPCODE0111                           * - MOVEQ
     RTS
-    JSR     OPCODE1000                           * - DIVU
+    JSR     OPCODE1000                           * - BAD DATA ----------------------------------
     RTS 
     JSR     OPCODE1001                           * - SUB
     RTS
@@ -286,7 +294,7 @@ OPCODE_JMP_TABLE
     RTS  
     JSR     OPCODE1011                           * - CMP
     RTS
-    JSR     OPCODE1100                           * - AND, MULS
+    JSR     OPCODE1100                           * - AND
     RTS
     JSR     OPCODE1101                           * - ADDA, ADD
     RTS
@@ -296,25 +304,25 @@ OPCODE_JMP_TABLE
     RTS   
 
 *********************************************************
-* 0100 Jump Table - USE FOR CLR, JSR, LEA, RTS - NOT MOVEM
+* 0100 Jump Table - USED FOR JSR, LEA, RTS
 THREE_TABLE     
-    JSR     THREE000            - LEA                  
+    JSR     THREE000            * - LEA                  
     RTS                                 
-    JSR     THREE001            - LEA, CLR        
+    JSR     THREE001            * - LEA, CLR        
     RTS                                 
-    JSR     THREE010            - LEA
+    JSR     THREE010            * - LEA
     RTS                                 
-    JSR     THREE011            - LEA        
+    JSR     THREE011            * - LEA        
     RTS                                 
-    JSR     THREE100            - LEA, MOVEM        
+    JSR     THREE100            * - LEA, MOVEM        
     RTS                                 
-    JSR     THREE101            - LEA
+    JSR     THREE101            * - LEA
     RTS                                 
-    JSR     THREE110            - LEA, MOVEM        
+    JSR     THREE110            * - LEA, MOVEM        
     RTS                                 
-    JSR     THREE111            - LEA, JSR, NOP, RTS       
+    JSR     THREE111            * - LEA, JSR, NOP, RTS       
     RTS    
-* 0100 Jump Table - USE FOR CLR, JSR, LEA, RTS - NOT MOVEM
+* 0100 Jump Table - USED FOR JSR, LEA, RTS
 THREE_TABLE_2     
     JSR     THREE2000           - CLR.B               
     RTS                                 
