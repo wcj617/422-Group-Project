@@ -342,8 +342,6 @@ START:                  ; first instruction of program
     LEA     $1230,A5
     LEA     $1301,A5
     LEA     $01001,A1    
-    LEA     VAR2,A1        (xxx).W,An
-    LEA     VAR3,A2        (xxx).L,An
     LEA     $1,A4
     LEA     $123456,A7   
 ****----------- AND-------------------
@@ -642,8 +640,7 @@ CCCC
     JSR     JUMP1
     JSR     JUMP2
     JSR     (A1)        (An)
-    JSR     VAR2       (xxx).W
-    JSR     VAR3       (xxx).L 
+ 
 JUMP1    *For JSR & RTS test
    MOVE.B  D1, D1
    RTS
@@ -670,6 +667,7 @@ JUMP2
 
 
     END    START        ; last line of source
+
 
 
 
