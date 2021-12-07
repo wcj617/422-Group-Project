@@ -271,11 +271,11 @@ OPCODE_JMPTABLES
     RTS
     JSR     OPCODE0001                           * - MOVE.B 
     RTS
-    JSR     OPCODE0010                           * - MOVE.L,MOVEA.L 
+    JSR     OPCODE0010                           * - MOVE.L, MOVEA.L 
     RTS
-    JSR     OPCODE0011                           * - MOVE.W,MOVEA.W 
+    JSR     OPCODE0011                           * - MOVE.W, MOVEA.W 
     RTS
-    JSR     OPCODE0100                           * - LEA, JSR,RTS, NOP
+    JSR     OPCODE0100                           * - LEA, JSR, RTS, NOP
     RTS
     JSR     OPCODE0101                           * - ADDQ ----------------------------------   
     RTS   
@@ -1058,6 +1058,8 @@ GET_MOVEQ
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D7, D4
     ANDI.W          #$00FF, D4
@@ -1116,6 +1118,8 @@ EA_Dn_OP1001_B
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1150,6 +1154,8 @@ EA_Dn_OP1001_B
 DN_EA_OP1001_B
     JSR             GET_SUB
     MOVE.B          #'B',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -1191,6 +1197,8 @@ EA_Dn_OP1001_W
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1224,6 +1232,8 @@ EA_Dn_OP1001_W
 Dn_EA_OP1001_W
     JSR            GET_SUB
     MOVE.B          #'W',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -1263,6 +1273,8 @@ EA_Dn_OP1001_L
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1296,6 +1308,8 @@ EA_Dn_OP1001_L
 Dn_EA_OP1001_L
     JSR             GET_SUB
     MOVE.B          #'L',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -1423,6 +1437,7 @@ OP1100_PRINTSIZE_B
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
     RTS         
 OP1100_PRINTSIZE_W
     MOVE.B      #'W',(A5)+
@@ -1430,9 +1445,11 @@ OP1100_PRINTSIZE_W
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
     RTS
 OP1100_PRINTSIZE_L
     MOVE.B      #'L',(A5)+
+    MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
@@ -1513,6 +1530,8 @@ EA_Dn_OP1101_B
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1547,6 +1566,8 @@ EA_Dn_OP1101_B
 Dn_EA_OP1101_B
     JSR             GET_ADD
     MOVE.B          #'B',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -1588,6 +1609,8 @@ EA_Dn_OP1101_W
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1621,6 +1644,8 @@ EA_Dn_OP1101_W
 Dn_EA_OP1101_W
     JSR             GET_ADD
     MOVE.B          #'W',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -1660,6 +1685,8 @@ EA_Dn_OP1101_L
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1693,6 +1720,8 @@ EA_Dn_OP1101_L
 Dn_EA_OP1101_L
     JSR             GET_ADD
     MOVE.B          #'L',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -1736,6 +1765,8 @@ EA_An_OP1101_W
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1772,6 +1803,8 @@ EA_An_OP1101_W
 EA_An_OP1101_L
     JSR             GET_ADDA
     MOVE.B          #'L',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -2208,6 +2241,10 @@ THREE2111
     MOVE.B      #'L',(A5)+
     MOVE.B      #'E',(A5)+
     MOVE.B      #'A',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
