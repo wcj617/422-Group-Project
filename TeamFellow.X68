@@ -251,6 +251,7 @@ CHECK_LTTR_LONG
     	RTS    	
     	
     	
+
 * GO TO OPCODE AND BUILD PRINTER -------------------------------------
 BUILD_Printer
         MOVE.W      D7, D6                          * D7 Contains the original opcode word
@@ -263,6 +264,7 @@ BUILD_Printer
         JSR         0(A0,D6)          	            * Calculates the jump address dynamically by using the index offset addressing mode
                                                     * The offset D6 is added to the start of the Jump Table at A0
         RTS            
+    
 
 ********************************************************************************************
 * JMP TABLES                                             
@@ -271,6 +273,7 @@ OPCODE_JMPTABLES
     RTS
     JSR     OPCODE0001                           * - MOVE.B 
     RTS
+
     JSR     OPCODE0010                           * - MOVE.L, MOVEA.L 
     RTS
     JSR     OPCODE0011                           * - MOVE.W, MOVEA.W 
@@ -900,7 +903,9 @@ DATA_7
 
 
 
+
 ******************* BCC, BLE, BGT, BRA ****************************************************************************
+
 OPCODE0110                                               
     MOVE.W          D5, D6                      *D5:XXX6 -> D6:XXX6      
     ROL.W           #4, D6                      *D6:XX6X 
@@ -917,6 +922,7 @@ OPCODE0110
     CMP.W           #$4, D6                      *D6:0004
     BEQ             OPCODE0110_GET_BCC              *Go to BCC Opcode
     
+
     ADD.B           #10, BAD_DATA_        *If none of those, then it is something we haven't decoded      
     RTS  
 OPCODE0110_GET_BLE
@@ -958,6 +964,7 @@ OPCODE0110_GET_BRA
     MOVE.B	        #' ',(A5)+		
     MOVE.B	        #' ',(A5)+
     MOVE.B	        #'$',(A5)+ 		
+
     BRA             OP0110_DISPMNT
 OPCODE0110_GET_BCC
     MOVE.B	        #'B',(A5)+			
@@ -968,6 +975,7 @@ OPCODE0110_GET_BCC
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+
     MOVE.B	        #'$',(A5)+ 
+
 OP0110_DISPMNT
     MOVE.W          D7,D6                           *D7:6XXX  -> D6:6XXX
     MOVE.L          A6,D5                           *Save current address to D5
@@ -1060,6 +1068,7 @@ GET_MOVEQ
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+
    
     MOVE.W          D7, D4
     ANDI.W          #$00FF, D4
@@ -1086,7 +1095,140 @@ GET_MOVEQ
     MULU            #6, D6
     LEA             RGSTRS, A0
     JSR             00(A0,D6)
+    RTS
+********************OR******************************************************************************************    
+OPCODE1000
+    MOVE.W      D5,D4                   *D5:XXXC
+    MOVE.W      D4,D5
+    ROL.W       #3,D4
+    ANDI.W      #$7,D4                      *Saving register into D4
+    LSL.W       #4,D5                       *D5[opmode][EAmode][EAregister][register]
+    BCC         OPCODE1000_EA_SOURCE
+    
+    JSR     OP1000_GET_SIZE                *EA_DESTINATION
+    JSR     OP1000_EA_MODE
+    JSR     OP1000_EA_RGSTR
+    
+    CMP.B   #$0,D6
+    BEQ     OP1000_INVL_EA_SRC
+    CMP.B   #$1,D6
+    BEQ     OP1000_INVL_EA_SRC
+    CMP.B   #$7,D6
+    BNE     OPCODE1000_EA_DEST_VALID
+    CMP.B   #%100,D5
+    BEQ     OP1000_INVL_EA_SRC
+        
+OPCODE1000_EA_DEST_VALID
+    JSR     OPCODE1000_AND
+    ROR.W   #3,D4
+    MOVE.W  D4,D5
+    JSR     SRT_EA_000
+    
+    MOVE.B      #',',(A5)+
+    MOVE.W      D7,D6
+    ROR.W       #3,D6
+    LEA         SRT_EAMODE,A0
+    MOVE.W      D6,D5
+    ANDI.W      #$7,D6
+    MULU        #6,D6
+    JSR         00(A0,D6)
+    RTS
+    
+OPCODE1000_EA_SOURCE
+    JSR     OP1000_AND_B
+    JSR     OP1000_INVL_EA_SRC
+    JSR     OP1000_INVL_EA_SRC
+    CMP.B   #$1,D6
+    BEQ     OP1000_INVL_EA_SRC
+    JSR     OPCODE1000_AND
+    MOVE.W      D7,D6
+    ROR.W       #3,D6
+    LEA         SRT_EAMODE,A0
+    MOVE.W      D6,D5
+    ANDI.W      #$7,D6
+    MOVE.B      #$1,D3
+    MULU        #6,D6
+    JSR         00(A0,D6)
+    
+    MOVE.B      #',',(A5)+
+    ROR.W       #3,D4
+    MOVE.W      D4,D5
+    JSR         SRT_EA_000
+    RTS
+* PRINT_SIZE----------------------     
+OPCODE1000_AND
+    MOVE.B      #'O',(A5)+
+    MOVE.B      #'R',(A5)+
+
+    MOVE.B      #'.',(A5)+
+    JSR         OPCODE1000_PRINTSIZE
+    RTS
+OPCODE1000_PRINTSIZE
+    CMP.B       #0,D3
+    BEQ         OP1000_PRINTSIZE_B 
+    CMP.B       #1,D3
+    BEQ         OP1000_PRINTSIZE_W
+    CMP.B       #2,D3
+    BEQ         OP1000_PRINTSIZE_L
+
+OP1000_PRINTSIZE_B    
+    MOVE.B      #'B',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    RTS         
+OP1000_PRINTSIZE_W
+    MOVE.B      #'W',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    RTS
+OP1000_PRINTSIZE_L
+    MOVE.B      #'L',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    RTS
+* MODE_REGISTER----------------------    
+OP1000_EA_RGSTR
+    MOVE.W  D7,D5
+    ANDI.W  #$7,D5
+    RTS
+OP1000_EA_MODE
+    MOVE.W  D6,D5
+    ROL.W   #5,D6
+    ANDI.W  #$7,D6
+    RTS
+OP1000_INVL_EA_SRC
+    ADD.B       #10, BAD_DATA_        
     RTS 
+* MODE_REGISTER----------------------
+OP1000_GET_SIZE
+    MOVE.W      D5,D6
+    ROL.W       #2,D5
+    ANDI.W      #$3,D5
+    CMP.W       #$0,D5
+    BEQ         OP1100_AND_B
+    CMP.W       #$1,D5
+    BEQ         OP1100_AND_W
+    CMP.W       #$2,D5
+    BEQ         OP1100_AND_L
+    ADD.B       #10, BAD_DATA_               
+    RTS
+
+OP1000_AND_B
+    MOVE.B      #0,D3
+    RTS
+OP1000_AND_W
+    MOVE.B      #1,D3
+    RTS
+OP1000_AND_L
+    MOVE.B      #2,D3
+    RTS    
+
 ******************* SUB ****************************************************************************
 OPCODE1001
     MOVE.W      D7, D4
@@ -1159,6 +1301,7 @@ DN_EA_OP1001_B
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+
    
     MOVE.B          #'D',(A5)+
     MOVE.W          D7, D4
@@ -1237,6 +1380,8 @@ Dn_EA_OP1001_W
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+
+
    
     MOVE.B          #'D',(A5)+
     MOVE.W          D7, D4
@@ -1438,6 +1583,7 @@ OP1100_PRINTSIZE_B
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
+
     RTS         
 OP1100_PRINTSIZE_W
     MOVE.B      #'W',(A5)+
@@ -1446,6 +1592,7 @@ OP1100_PRINTSIZE_W
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
+
     RTS
 OP1100_PRINTSIZE_L
     MOVE.B      #'L',(A5)+
@@ -1454,6 +1601,7 @@ OP1100_PRINTSIZE_L
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
+
     RTS
 * MODE_REGISTER----------------------    
 OP1100_EA_RGSTR
@@ -1725,6 +1873,7 @@ Dn_EA_OP1101_L
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+
    
     
     MOVE.B          #'D',(A5)+
@@ -2599,6 +2748,7 @@ END_ADDR      DS.L    1   *Used to store ending address
 PROGRAM_PRINTER         DC.L    1 * used to store characters to print on the screen
         
         END    START
+
 
 
 
