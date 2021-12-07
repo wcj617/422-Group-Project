@@ -293,7 +293,7 @@ OPCODE_JMPTABLES
     RTS
     JSR     OPCODE1101                           * - ADDA, ADD
     RTS
-    JSR     OPCODE1110                           * - ASR, LSL, ROL
+    JSR     OPCODE1110                           * - ASL, ASR, LSL, LSR, ROL, ROR 
     RTS  
     JSR     OPCODE1111                           * - BAD DATA -------------------------------------
     RTS   
@@ -1924,13 +1924,15 @@ GET_ADDA
     MOVE.B          #'.',(A5)+
     RTS   
 
-*************** ASR, LSL, ROL *************************************************
+*************** ASL, ASR, LSL, LSR, ROL, ROR *************************************************
 OPCODE1110    
     * Check for Memory Shift
     MOVE.W      D7,D4
     ANDI.W      #$0FC0, D4
     CMP.W       #$07C0, D4
     BEQ         CHECK_ROL_LGCL
+    CMP.W      #$06C0, D4
+    BEQ         CHECK_ROR_LGCL
     CMP.W       #$01C0, D4
     BEQ         CHECK_ASL_LGCL
     CMP.W       #$00C0, D4
@@ -1947,6 +1949,8 @@ OPCODE1110
     ANDI.W      #$0118, D4
     CMP.W       #$0118, D4
     BEQ         GET_ROL
+    CMP.W       #$0018,D4
+    BEQ         GET_ROR
     CMP.W       #$0100, D4
     BEQ         GET_ASL
     CMP.W       #$0000, D4
@@ -1986,6 +1990,32 @@ CHECK_ROL_LGCL
     LEA             SRT_EAMODE, A0
     JSR         00(A0,D6)
     RTS
+CHECK_ROR_LGCL
+    MOVE.B  #'R',(A5)+
+    MOVE.B  #'O',(A5)+
+    MOVE.B  #'R',(A5)+
+    MOVE.B  #'.',(A5)+
+    MOVE.B  #'W',(A5)+
+    MOVE.B  #' ',(A5)+
+    MOVE.B  #' ',(A5)+
+    MOVE.B  #' ',(A5)+
+   
+    MOVE.W          D5, D6                    
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    MOVE.W          D5, D6                    
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    MOVE.W          D5, D6                    
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+
+    ANDI.W          #$0007, D6
+    MULU            #6, D6
+    LEA             SRT_EAMODE, A0
+    JSR         00(A0,D6)
+    RTS
+
 CHECK_ASL_LGCL  
     MOVE.B  #'A',(A5)+
     MOVE.B  #'S',(A5)+
@@ -2095,6 +2125,13 @@ GET_ROL
     MOVE.B  #'R',(A5)+
     MOVE.B  #'O',(A5)+
     MOVE.B  #'L',(A5)+
+    MOVE.B  #'.',(A5)+
+    JSR     SIZE_SHIFT
+    RTS
+GET_ROR
+    MOVE.B  #'R',(A5)+
+    MOVE.B  #'O',(A5)+
+    MOVE.B  #'R',(A5)+
     MOVE.B  #'.',(A5)+
     JSR     SIZE_SHIFT
     RTS
@@ -2736,6 +2773,7 @@ END_ADDR      DS.L    1   *Used to store ending address
 PROGRAM_PRINTER         DC.L    1 * used to store characters to print on the screen
         
         END    START
+
 
 
 
