@@ -251,16 +251,20 @@ CHECK_LTTR_LONG
     	RTS    	
     	
     	
-* GO TO OPCODE AND FILL PRINTER -------------------------------------
-BUILD_PRINTER
-        MOVE.W      D7, D6                          
+
+* GO TO OPCODE AND BUILD PRINTER -------------------------------------
+BUILD_Printer
+        MOVE.W      D7, D6                          * D7 Contains the original opcode word
         ROL.W       #4, D6				            
-        MOVE.W      D6, D5
-        LEA         OPCODE_JMPTABLES, A0      	    
-        ANDI.W      #$000F, D6
-        MULU        #8, D6             	            
-        JSR         0(A0,D6)          	            
-        RTS        
+        MOVE.W      D6, D5                          * D5 contains the opcode with the 1st 4 bits rotated left
+        LEA         OPCODE_JMPTABLES, A0      	    * Load the starting address of the Jump Table
+        ANDI.W      #$000F, D6                      * Mask to retain only the rotated bits in D6
+        MULU        #8, D6             	            * Multiply the 4 bits in D6 by 8, which is the "stride" distance between
+                                                    * locations in the Jump Table.
+        JSR         0(A0,D6)          	            * Calculates the jump address dynamically by using the index offset addressing mode
+                                                    * The offset D6 is added to the start of the Jump Table at A0
+        RTS            
+    
 
 ********************************************************************************************
 * JMP TABLES                                             
@@ -269,11 +273,12 @@ OPCODE_JMPTABLES
     RTS
     JSR     OPCODE0001                           * - MOVE.B 
     RTS
-    JSR     OPCODE0010                           * - MOVE.L,MOVEA.L 
+
+    JSR     OPCODE0010                           * - MOVE.L, MOVEA.L 
     RTS
-    JSR     OPCODE0011                           * - MOVE.W,MOVEA.W 
+    JSR     OPCODE0011                           * - MOVE.W, MOVEA.W 
     RTS
-    JSR     OPCODE0100                           * - LEA, JSR, RTS, NOP, NOT    
+    JSR     OPCODE0100                           * - LEA, JSR, RTS, NOP
     RTS
     JSR     OPCODE0101                           * - ADDQ ----------------------------------   
     RTS   
@@ -281,7 +286,7 @@ OPCODE_JMPTABLES
     RTS
     JSR     OPCODE0111                           * - MOVEQ
     RTS
-    JSR     OPCODE1000                           * - OR   
+    JSR     OPCODE1000                           * - BAD DATA  
     RTS 
     JSR     OPCODE1001                           * - SUB
     RTS
@@ -346,7 +351,10 @@ OPCODE1011
     RTS  
 OPCODE1111 
     ADD.B       #10, BAD_DATA_            
-    RTS                              
+    RTS                          
+OPCODE1000
+    ADD.B       #10, BAD_DATA_          
+    RTS    
 OPCODE0000
     ADD.B       #10, BAD_DATA_          
     RTS
@@ -895,18 +903,26 @@ DATA_7
 
 
 
-******************* BCC, BLE, BGT ****************************************************************************
+
+******************* BCC, BLE, BGT, BRA ****************************************************************************
+
 OPCODE0110                                               
     MOVE.W          D5, D6                      *D5:XXX6 -> D6:XXX6      
     ROL.W           #4, D6                      *D6:XX6X 
     MOVE.W          D6, D5                      *D6:XX6X -> D5:XX6X
     ANDI.W          #$000F, D6                  *D6:000X
-    CMP.W           #$F,D6                      *D6:000F
-    BEQ            OPCODE0110_GET_BLE              *Go to BLE OPcode
-    CMP.W           #$E,D6                      *D6:000E
+    CMP.W           #$F, D6                      *D6:000F
+    BEQ             OPCODE0110_GET_BLE              *Go to BLE OPcode
+    CMP.W           #$E, D6                      *D6:000E
     BEQ             OPCODE0110_GET_BGT               *Go to BGT OPcode
-    CMP.W           #$4,D6                      *D6:0004
+    CMP.W           #$7, D6
+    BEQ             OPCODE0110_GET_BEQ
+    CMP.W           #$0, D6
+    BEQ             OPCODE0110_GET_BRA
+    CMP.W           #$4, D6                      *D6:0004
     BEQ             OPCODE0110_GET_BCC              *Go to BCC Opcode
+    
+
     ADD.B           #10, BAD_DATA_        *If none of those, then it is something we haven't decoded      
     RTS  
 OPCODE0110_GET_BLE
@@ -916,7 +932,8 @@ OPCODE0110_GET_BLE
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
-    MOVE.B	        #' ',(A5)+   
+    MOVE.B	        #' ',(A5)+
+    MOVE.B	        #'$',(A5)+   
     BRA             OP0110_DISPMNT         *To check how far away the to branch to
 OPCODE0110_GET_BGT    
     MOVE.B	        #'B',(A5)+			
@@ -926,6 +943,28 @@ OPCODE0110_GET_BGT
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+
+    MOVE.B	        #'$',(A5)+ 
+    BRA             OP0110_DISPMNT
+OPCODE0110_GET_BEQ
+    MOVE.B	        #'B',(A5)+			
+    MOVE.B	        #'E',(A5)+			
+    MOVE.B	        #'Q',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+
+    MOVE.B	        #' ',(A5)+
+    MOVE.B	        #'$',(A5)+ 				
+    BRA             OP0110_DISPMNT
+OPCODE0110_GET_BRA
+    MOVE.B	        #'B',(A5)+			
+    MOVE.B	        #'R',(A5)+			
+    MOVE.B	        #'A',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+		
+    MOVE.B	        #' ',(A5)+
+    MOVE.B	        #'$',(A5)+ 		
+
     BRA             OP0110_DISPMNT
 OPCODE0110_GET_BCC
     MOVE.B	        #'B',(A5)+			
@@ -935,6 +974,8 @@ OPCODE0110_GET_BCC
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+
+    MOVE.B	        #'$',(A5)+ 
+
 OP0110_DISPMNT
     MOVE.W          D7,D6                           *D7:6XXX  -> D6:6XXX
     MOVE.L          A6,D5                           *Save current address to D5
@@ -1025,6 +1066,9 @@ GET_MOVEQ
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+
    
     MOVE.W          D7, D4
     ANDI.W          #$00FF, D4
@@ -1216,6 +1260,8 @@ EA_Dn_OP1001_B
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1253,6 +1299,9 @@ DN_EA_OP1001_B
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+
    
     MOVE.B          #'D',(A5)+
     MOVE.W          D7, D4
@@ -1288,6 +1337,8 @@ DN_EA_OP1001_B
 EA_Dn_OP1001_W
     JSR            GET_SUB
     MOVE.B          #'W',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -1327,6 +1378,10 @@ Dn_EA_OP1001_W
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+
+
    
     MOVE.B          #'D',(A5)+
     MOVE.W          D7, D4
@@ -1363,6 +1418,8 @@ EA_Dn_OP1001_L
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1396,6 +1453,8 @@ EA_Dn_OP1001_L
 Dn_EA_OP1001_L
     JSR             GET_SUB
     MOVE.B          #'L',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -1523,6 +1582,8 @@ OP1100_PRINTSIZE_B
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+
     RTS         
 OP1100_PRINTSIZE_W
     MOVE.B      #'W',(A5)+
@@ -1530,6 +1591,8 @@ OP1100_PRINTSIZE_W
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+
     RTS
 OP1100_PRINTSIZE_L
     MOVE.B      #'L',(A5)+
@@ -1537,6 +1600,8 @@ OP1100_PRINTSIZE_L
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+
     RTS
 * MODE_REGISTER----------------------    
 OP1100_EA_RGSTR
@@ -1613,6 +1678,8 @@ EA_Dn_OP1101_B
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1647,6 +1714,8 @@ EA_Dn_OP1101_B
 Dn_EA_OP1101_B
     JSR             GET_ADD
     MOVE.B          #'B',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -1688,6 +1757,8 @@ EA_Dn_OP1101_W
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1721,6 +1792,8 @@ EA_Dn_OP1101_W
 Dn_EA_OP1101_W
     JSR             GET_ADD
     MOVE.B          #'W',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -1760,6 +1833,8 @@ EA_Dn_OP1101_L
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1796,6 +1871,9 @@ Dn_EA_OP1101_L
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+
    
     
     MOVE.B          #'D',(A5)+
@@ -1836,6 +1914,8 @@ EA_An_OP1101_W
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
    
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
@@ -1872,6 +1952,8 @@ EA_An_OP1101_W
 EA_An_OP1101_L
     JSR             GET_ADDA
     MOVE.B          #'L',(A5)+
+    MOVE.B          #' ',(A5)+
+    MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
     MOVE.B          #' ',(A5)+
@@ -2311,6 +2393,10 @@ THREE2111
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
     MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+
     MOVE.W      D5, D6                     
     ROL.W       #3, D6
     MOVE.W      D6, D5
@@ -2662,7 +2748,6 @@ END_ADDR      DS.L    1   *Used to store ending address
 PROGRAM_PRINTER         DC.L    1 * used to store characters to print on the screen
         
         END    START
-
 
 
 
