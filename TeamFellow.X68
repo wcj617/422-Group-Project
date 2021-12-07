@@ -252,15 +252,17 @@ CHECK_LTTR_LONG
     	
     	
 * GO TO OPCODE AND FILL PRINTER -------------------------------------
-BUILD_PRINTER
-        MOVE.W      D7, D6                          
+FILL_Printer
+        MOVE.W      D7, D6                          * D7 Contains the original opcode word
         ROL.W       #4, D6				            
-        MOVE.W      D6, D5
-        LEA         OPCODE_JMPTABLES, A0      	    
-        ANDI.W      #$000F, D6
-        MULU        #8, D6             	            
-        JSR         0(A0,D6)          	            
-        RTS        
+        MOVE.W      D6, D5                          * D5 contains the opcode with the 1st 4 bits rotated left
+        LEA         OPCODE_JMP_TABLE, A0      	    * Load the starting address of the Jump Table
+        ANDI.W      #$000F, D6                      * Mask to retain only the rotated bits in D6
+        MULU        #8, D6             	            * Multiply the 4 bits in D6 by 8, which is the "stride" distance between
+                                                    * locations in the Jump Table.
+        JSR         0(A0,D6)          	            * Calculates the jump address dynamically by using the index offset addressing mode
+                                                    * The offset D6 is added to the start of the Jump Table at A0
+        RTS            
 
 ********************************************************************************************
 * JMP TABLES                                             
@@ -898,18 +900,23 @@ DATA_7
 
 
 
-******************* BCC, BLE, BGT ****************************************************************************
+******************* BCC, BLE, BGT, BRA ****************************************************************************
 OPCODE0110                                               
     MOVE.W          D5, D6                      *D5:XXX6 -> D6:XXX6      
     ROL.W           #4, D6                      *D6:XX6X 
     MOVE.W          D6, D5                      *D6:XX6X -> D5:XX6X
     ANDI.W          #$000F, D6                  *D6:000X
-    CMP.W           #$F,D6                      *D6:000F
-    BEQ            OPCODE0110_GET_BLE              *Go to BLE OPcode
-    CMP.W           #$E,D6                      *D6:000E
+    CMP.W           #$F, D6                      *D6:000F
+    BEQ             OPCODE0110_GET_BLE              *Go to BLE OPcode
+    CMP.W           #$E, D6                      *D6:000E
     BEQ             OPCODE0110_GET_BGT               *Go to BGT OPcode
-    CMP.W           #$4,D6                      *D6:0004
+    CMP.W           #$7, D6
+    BEQ             OPCODE0110_GET_BEQ
+    CMP.W           #$0, D6
+    BEQ             OPCODE0110_GET_BRA
+    CMP.W           #$4, D6                      *D6:0004
     BEQ             OPCODE0110_GET_BCC              *Go to BCC Opcode
+    
     ADD.B           #10, BAD_DATA_        *If none of those, then it is something we haven't decoded      
     RTS  
 OPCODE0110_GET_BLE
@@ -929,6 +936,24 @@ OPCODE0110_GET_BGT
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+
+    BRA             OP0110_DISPMNT
+OPCODE0110_GET_BEQ
+    MOVE.B	        #'B',(A5)+			
+    MOVE.B	        #'E',(A5)+			
+    MOVE.B	        #'Q',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+
+    MOVE.B	        #' ',(A5)+				
+    BRA             OP0110_DISPMNT
+OPCODE0110_GET_BRA
+    MOVE.B	        #'B',(A5)+			
+    MOVE.B	        #'R',(A5)+			
+    MOVE.B	        #'A',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+		
+    MOVE.B	        #' ',(A5)+		
     BRA             OP0110_DISPMNT
 OPCODE0110_GET_BCC
     MOVE.B	        #'B',(A5)+			
