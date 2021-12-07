@@ -1925,33 +1925,42 @@ GET_ADDA
     RTS   
 
 *************** ASR, LSL, ROL *************************************************
-OPCODE1110     
+OPCODE1110    
     * Check for Memory Shift
     MOVE.W      D7,D4
     ANDI.W      #$0FC0, D4
     CMP.W       #$07C0, D4
     BEQ         CHECK_ROL_LGCL
+    CMP.W       #$01C0, D4
+    BEQ         CHECK_ASL_LGCL
     CMP.W       #$00C0, D4
     BEQ        CHECK_ASR_LGCL
     CMP.W       #$03C0, D4
     BEQ         CHECK_LSL_LGCL
-    
+    CMP.W       #$02C0, D4
+    BEQ         CHECK_LSR_LGCL
+   
     CLR.L       D4
-    
+   
     * Check for Register Shift
     MOVE.W      D7, D4
     ANDI.W      #$0118, D4
     CMP.W       #$0118, D4
     BEQ         GET_ROL
+    CMP.W       #$0100, D4
+    BEQ         GET_ASL
     CMP.W       #$0000, D4
     BEQ         GET_ASR
     CMP.W       #$0108, D4
     BEQ         GET_LSL
-    
+    CMP.W       #$0008, D4
+    BEQ         GET_LSR
+
+   
     * Otherwise is bad data
-    ADD.B       #10, BAD_DATA_               
+    ADD.B       #10, BAD_DATA_              
     RTS
-    
+   
 CHECK_ROL_LGCL
     MOVE.B  #'R',(A5)+
     MOVE.B  #'O',(A5)+
@@ -1961,22 +1970,48 @@ CHECK_ROL_LGCL
     MOVE.B  #' ',(A5)+
     MOVE.B  #' ',(A5)+
     MOVE.B  #' ',(A5)+
-    
+   
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
     MOVE.W          D6, D5
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
     MOVE.W          D6, D5
-    MOVE.W          D5, D6                     
+    MOVE.W          D5, D6                    
     ROL.W           #3, D6
     MOVE.W          D6, D5
 
     ANDI.W          #$0007, D6
     MULU            #6, D6
     LEA             SRT_EAMODE, A0
-    JSR         00(A0,D6) 
+    JSR         00(A0,D6)
     RTS
+CHECK_ASL_LGCL  
+    MOVE.B  #'A',(A5)+
+    MOVE.B  #'S',(A5)+
+    MOVE.B  #'L',(A5)+
+    MOVE.B  #'.',(A5)+
+    MOVE.B  #'W',(A5)+
+    MOVE.B  #' ',(A5)+
+    MOVE.B  #' ',(A5)+
+    MOVE.B  #' ',(A5)+
+   
+    MOVE.W          D5, D6                    
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    MOVE.W          D5, D6                    
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    MOVE.W          D5, D6                    
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+
+    ANDI.W          #$0007, D6
+    MULU            #6, D6
+    LEA             SRT_EAMODE, A0
+    JSR         00(A0,D6)
+    RTS
+
 CHECK_ASR_LGCL  
     MOVE.B  #'A',(A5)+
     MOVE.B  #'S',(A5)+
@@ -1986,53 +2021,86 @@ CHECK_ASR_LGCL
     MOVE.B  #' ',(A5)+
     MOVE.B  #' ',(A5)+
     MOVE.B  #' ',(A5)+
-    
+   
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
     MOVE.W          D6, D5
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
     MOVE.W          D6, D5
-    MOVE.W          D5, D6                     
+    MOVE.W          D5, D6                    
     ROL.W           #3, D6
     MOVE.W          D6, D5
 
     ANDI.W          #$0007, D6
     MULU            #6, D6
     LEA             SRT_EAMODE, A0
-    JSR         00(A0,D6) 
+    JSR         00(A0,D6)
     RTS
-CHECK_LSL_LGCL 
+CHECK_LSL_LGCL
     MOVE.B  #'L',(A5)+
     MOVE.B  #'S',(A5)+
     MOVE.B  #'L',(A5)+
     MOVE.B  #'.',(A5)+
-    MOVE.B  #'W',(A5)+   
+    MOVE.B  #'W',(A5)+  
     MOVE.B  #' ',(A5)+
     MOVE.B  #' ',(A5)+
     MOVE.B  #' ',(A5)+
-    
+   
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
     MOVE.W          D6, D5
     MOVE.W          D5, D6                    
     ROL.W           #3, D6
     MOVE.W          D6, D5
-    MOVE.W          D5, D6                     
+    MOVE.W          D5, D6                    
     ROL.W           #3, D6
     MOVE.W          D6, D5
 
     ANDI.W          #$0007, D6
     MULU            #6, D6
     LEA             SRT_EAMODE, A0
-    JSR         00(A0,D6) 
+    JSR         00(A0,D6)
     RTS
-    
-    
-    
+   
+CHECK_LSR_LGCL
+    MOVE.B  #'L',(A5)+
+    MOVE.B  #'S',(A5)+
+    MOVE.B  #'R',(A5)+
+    MOVE.B  #'.',(A5)+
+    MOVE.B  #'W',(A5)+  
+    MOVE.B  #' ',(A5)+
+    MOVE.B  #' ',(A5)+
+    MOVE.B  #' ',(A5)+
+   
+    MOVE.W          D5, D6                    
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    MOVE.W          D5, D6                    
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+    MOVE.W          D5, D6                    
+    ROL.W           #3, D6
+    MOVE.W          D6, D5
+
+    ANDI.W          #$0007, D6
+    MULU            #6, D6
+    LEA             SRT_EAMODE, A0
+    JSR         00(A0,D6)
+    RTS
+
+   
+   
 GET_ROL
     MOVE.B  #'R',(A5)+
     MOVE.B  #'O',(A5)+
+    MOVE.B  #'L',(A5)+
+    MOVE.B  #'.',(A5)+
+    JSR     SIZE_SHIFT
+    RTS
+GET_ASL
+    MOVE.B  #'A',(A5)+
+    MOVE.B  #'S',(A5)+
     MOVE.B  #'L',(A5)+
     MOVE.B  #'.',(A5)+
     JSR     SIZE_SHIFT
@@ -2051,6 +2119,13 @@ GET_LSL
     MOVE.B      #'.',(A5)+            
     JSR         SIZE_SHIFT
     RTS
+GET_LSR
+    MOVE.B      #'L',(A5)+
+    MOVE.B      #'S',(A5)+
+    MOVE.B      #'R',(A5)+
+    MOVE.B      #'.',(A5)+            
+    JSR         SIZE_SHIFT
+    RTS
 SIZE_SHIFT
     MOVE.W      D7, D4
     ANDI.W      #$00C0, D4
@@ -2060,10 +2135,10 @@ SIZE_SHIFT
     BEQ         SIZESHIFT_W
     CMP.W       #$0080, D4
     BEQ         SIZESHIFT_L
-    
-    ADD.B       #10, BAD_DATA_               
+   
+    ADD.B       #10, BAD_DATA_              
     RTS
-    
+   
 SIZESHIFT_B
     MOVE.B      #'B',(A5)+
     MOVE.B      #' ',(A5)+
@@ -2087,7 +2162,7 @@ SHIFT__IR
     BEQ         SHIFT_Dn_RGSTR              ******
     CMP.W       #$0000, D4
     BEQ         SHIFT_NUMBER
-    
+   
 SHIFT_Dn_RGSTR
     MOVE.B      #'D',(A5)+
     MOVE.W      D7, D4
@@ -2099,9 +2174,9 @@ SHIFT_Dn_RGSTR
     ANDI.W      #$0007, D6
     MULU        #6, D6
     LEA         RGSTRS, A0
-    JSR         00(A0,D6)   
+    JSR         00(A0,D6)  
 
-    MOVE.B      #',',(A5)+   
+    MOVE.B      #',',(A5)+  
     MOVE.B      #'D',(A5)+
     MOVE.W      D7, D4
     ANDI.W      #$0007, D4
@@ -2115,7 +2190,7 @@ SHIFT_Dn_RGSTR
     JSR         00(A0,D6)  
    
     RTS
-    
+   
 SHIFT_NUMBER
     MOVE.B      #'#',(A5)+
     MOVE.W      D7, D4
@@ -2124,8 +2199,8 @@ SHIFT_NUMBER
     LSR.B       #1, D4
     ADDI.B      #$30,D4
     MOVE.B      D4,(A5)+
-    
-    MOVE.B      #',',(A5)+   
+   
+    MOVE.B      #',',(A5)+  
     MOVE.B      #'D',(A5)+
     MOVE.W      D7, D4
     ANDI.W      #$0007, D4
@@ -2138,7 +2213,6 @@ SHIFT_NUMBER
     LEA         RGSTRS, A0
     JSR         00(A0,D6)
     RTS
-
 
 
     
