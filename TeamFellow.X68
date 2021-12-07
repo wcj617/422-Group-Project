@@ -278,7 +278,7 @@ OPCODE_JMPTABLES
     RTS
     JSR     OPCODE0011                           * - MOVE.W, MOVEA.W 
     RTS
-    JSR     OPCODE0100                           * - LEA, JSR, RTS, NOP
+    JSR     OPCODE0100                           * - LEA, JSR, RTS, NOP, NOT
     RTS
     JSR     OPCODE0101                           * - ADDQ ----------------------------------   
     RTS   
@@ -286,7 +286,7 @@ OPCODE_JMPTABLES
     RTS
     JSR     OPCODE0111                           * - MOVEQ
     RTS
-    JSR     OPCODE1000                           * - BAD DATA  
+    JSR     OPCODE1000                           * - OR 
     RTS 
     JSR     OPCODE1001                           * - SUB
     RTS
@@ -324,11 +324,11 @@ THREE_TABLE
     RTS    
 * 0100 Jump Table - USE FOR JSR, LEA, RTS 
 THREE_TABLE_2     
-    JSR     THREE2000           - Bad Data                
+    JSR     THREE2000           * - NOT                
     RTS                                 
-    JSR     THREE2001           - Bad Data        
+    JSR     THREE2001           * - NOT       
     RTS                                
-    JSR     THREE2010           - Bad Data 
+    JSR     THREE2010           * - NOT
     RTS                                 
     JSR     THREE2011           - JSR        
     RTS                                 
@@ -351,10 +351,7 @@ OPCODE1011
     RTS  
 OPCODE1111 
     ADD.B       #10, BAD_DATA_            
-    RTS                          
-OPCODE1000
-    ADD.B       #10, BAD_DATA_          
-    RTS    
+    RTS                           
 OPCODE0000
     ADD.B       #10, BAD_DATA_          
     RTS
@@ -682,10 +679,10 @@ GET_MOVE_A_W
                MOVE.B          #' ',(A5)+
                BRA             OPCODE0001_DECODE_MOVE
 
-******************* JSR RTS NOP LEA CLR MOVEM****************************************************************************       
+******************* JSR RTS NOP LEA ****************************************************************************       
 OPCODE0100
 
-    * CHECK IF JSR RTS NOP LEA CLR 
+    * CHECK IF JSR RTS NOP LEA
     MOVE.W          D5, D6                     
     ROL.W           #3, D6
     MOVE.W          D6, D5
@@ -2338,19 +2335,24 @@ CHECK_RTS
     MOVE.B  #'S',(A5)+						* Insert S into output
     RTS       
 *-------------------------------------------------------------------------------  
-THREE2000
-    ADDI.B      #10,BAD_DATA_
+THREE2000  * add NOT
+    JSR      GET_NOT
     RTS
 ERROR
     ADDI.B      #10,BAD_DATA_  
     RTS
-THREE2001
-    ADDI.B      #10,BAD_DATA_
+THREE2001  * Add NOT
+    JSR      GET_NOT
     RTS
 
-THREE2010
+THREE2010  * Check JSR or NOT
     MOVE.W      D7, D6
-    
+
+    ROL.W       #7, D6   * Move 1st 7 bits
+    CMP.W       #$7, D6  * Check if these 3 bits are 111
+    BNE         GET_NOT  * If not, this is NOT        
+
+    MOVE.W      D7, D6
     ANDI.W      #$FE00, D6
     CMP.W       #$4200, D6
     BEQ         ERROR
@@ -2364,6 +2366,15 @@ THREE2010
     MOVE.B      #' ',(A5)+    
     MOVE.B      #' ',(A5)+ 
     BRA         THREE2010_EA   
+
+GET_NOT
+    MOVE.B      #'N',(A5)+
+    MOVE.B      #'O',(A5)+
+    MOVE.B      #'T',(A5)+
+    MOVE.B      #' ',(A5)+
+    MOVE.B      #' ',(A5)+    
+    MOVE.B      #' ',(A5)+ 
+    BRA         THREE2010_EA  
     
 THREE2010_EA    
     MOVE.W      D5, D6                     
