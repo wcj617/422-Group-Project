@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 12/6/2021 10:22:54 PM
+Created On: 12/6/2021 10:27:19 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :Group Project    
@@ -172,8 +172,7 @@ Created On: 12/6/2021 10:22:54 PM
 000011A6                           168          
 000011A6  4BF9 00002E72            169          LEA         PROGRAM_PRINTER, A5                  
 000011AC  3E1E                     170          MOVE.W      (A6)+, D7
-Line 171 ERROR: Undefined symbol
-000011AE  4EB9 004DBD16            171          JSR         BUILD_PRINTER                * FILL Printer
+000011AE  4EB9 0000128E            171          JSR         BUILD_PRINTER                * FILL Printer
 000011B4                           172          
 000011B4  0C39 000A 00002E60       173          CMP.B       #10, BAD_DATA_        * Check if Bad Data Switch is True
 000011BC  6700 0012                174          BEQ         PRINT_BAD_DATA  
@@ -256,13 +255,12 @@ Line 171 ERROR: Undefined symbol
 0000128C  4E75                     251          RTS     
 0000128E                           252          
 0000128E                           253          
-0000128E                           254  * GO TO OPCODE AND FILL PRINTER -------------------------------------
-0000128E                           255  FILL_Printer
+0000128E                           254  * GO TO OPCODE AND BUILD PRINTER -------------------------------------
+0000128E                           255  BUILD_Printer
 0000128E  3C07                     256          MOVE.W      D7, D6                          * D7 Contains the original opcode word
 00001290  E95E                     257          ROL.W       #4, D6                          
 00001292  3A06                     258          MOVE.W      D6, D5                          * D5 contains the opcode with the 1st 4 bits rotated left
-Line 259 ERROR: Undefined symbol
-00001294  41F9 004DBD16            259          LEA         OPCODE_JMP_TABLE, A0            * Load the starting address of the Jump Table
+00001294  41F9 000012A8            259          LEA         OPCODE_JMPTABLES, A0            * Load the starting address of the Jump Table
 0000129A  0246 000F                260          ANDI.W      #$000F, D6                      * Mask to retain only the rotated bits in D6
 0000129E  CCFC 0008                261          MULU        #8, D6                          * Multiply the 4 bits in D6 by 8, which is the "stride" distance between
 000012A2                           262                                                      * locations in the Jump Table.
@@ -2564,7 +2562,7 @@ Line 259 ERROR: Undefined symbol
 00002E76                          2558          
 00002E76                          2559          END    START
 
-2 errors detected
+No errors detected
 No warnings generated
 
 
@@ -2581,6 +2579,7 @@ ADD_ZERO            2AE4
 AN_OP0001           14AC
 BADSIZES_ADDR       106A
 BAD_DATA_           2E60
+BUILD_PRINTER       128E
 CHECK_ASR_LGCL      24E2
 CHECK_JSR           27C8
 CHECK_LETTER        1258
@@ -2652,7 +2651,6 @@ ERROR_ODDADDR       2E05
 ERROR_SADDR_POINT   2E1C
 ERROR_STRTGEND      2DD8
 ERROR_STRT_ADDR     2D60
-FILL_PRINTER        128E
 GET_ADD             242C
 GET_ADDA            243E
 GET_ASR             2586

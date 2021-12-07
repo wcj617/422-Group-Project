@@ -251,12 +251,12 @@ CHECK_LTTR_LONG
     	RTS    	
     	
     	
-* GO TO OPCODE AND FILL PRINTER -------------------------------------
-FILL_Printer
+* GO TO OPCODE AND BUILD PRINTER -------------------------------------
+BUILD_Printer
         MOVE.W      D7, D6                          * D7 Contains the original opcode word
         ROL.W       #4, D6				            
         MOVE.W      D6, D5                          * D5 contains the opcode with the 1st 4 bits rotated left
-        LEA         OPCODE_JMP_TABLE, A0      	    * Load the starting address of the Jump Table
+        LEA         OPCODE_JMPTABLES, A0      	    * Load the starting address of the Jump Table
         ANDI.W      #$000F, D6                      * Mask to retain only the rotated bits in D6
         MULU        #8, D6             	            * Multiply the 4 bits in D6 by 8, which is the "stride" distance between
                                                     * locations in the Jump Table.
@@ -926,7 +926,8 @@ OPCODE0110_GET_BLE
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
-    MOVE.B	        #' ',(A5)+   
+    MOVE.B	        #' ',(A5)+
+    MOVE.B	        #'$',(A5)+   
     BRA             OP0110_DISPMNT         *To check how far away the to branch to
 OPCODE0110_GET_BGT    
     MOVE.B	        #'B',(A5)+			
@@ -936,6 +937,7 @@ OPCODE0110_GET_BGT
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+
+    MOVE.B	        #'$',(A5)+ 
     BRA             OP0110_DISPMNT
 OPCODE0110_GET_BEQ
     MOVE.B	        #'B',(A5)+			
@@ -944,7 +946,8 @@ OPCODE0110_GET_BEQ
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+
-    MOVE.B	        #' ',(A5)+				
+    MOVE.B	        #' ',(A5)+
+    MOVE.B	        #'$',(A5)+ 				
     BRA             OP0110_DISPMNT
 OPCODE0110_GET_BRA
     MOVE.B	        #'B',(A5)+			
@@ -953,7 +956,8 @@ OPCODE0110_GET_BRA
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+		
-    MOVE.B	        #' ',(A5)+		
+    MOVE.B	        #' ',(A5)+
+    MOVE.B	        #'$',(A5)+ 		
     BRA             OP0110_DISPMNT
 OPCODE0110_GET_BCC
     MOVE.B	        #'B',(A5)+			
@@ -963,6 +967,7 @@ OPCODE0110_GET_BCC
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+
+    MOVE.B	        #'$',(A5)+ 
 OP0110_DISPMNT
     MOVE.W          D7,D6                           *D7:6XXX  -> D6:6XXX
     MOVE.L          A6,D5                           *Save current address to D5
