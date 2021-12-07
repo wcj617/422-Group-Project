@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 12/7/2021 12:18:02 AM
+Created On: 12/7/2021 12:20:27 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :Group Project    
@@ -297,7 +297,7 @@ Created On: 12/7/2021 12:18:02 AM
 0000130E  4E75                     293      RTS
 00001310  4EB9 000021D6            294      JSR     OPCODE1101                           * - ADDA, ADD
 00001316  4E75                     295      RTS
-00001318  4EB9 0000257C            296      JSR     OPCODE1110                           * - ASR, LSL, ROL
+00001318  4EB9 0000257C            296      JSR     OPCODE1110                           * - ASL, ASR, LSL, LSR, ROL, ROR 
 0000131E  4E75                     297      RTS  
 00001320  4EB9 000013BC            298      JSR     OPCODE1111                           * - BAD DATA -------------------------------------
 00001326  4E75                     299      RTS   
