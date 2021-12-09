@@ -74,11 +74,11 @@ AddressCounting   ADD.B   D6,D5
                   CMP.B   #$0,D3
                   BNE     AtoH
 
-StartingAd        SUBI.B  #1,D4    * comment
-                  CMP.B   #$0,D4    * comment
-                  BEQ     EndingAd   * comment
-                  MOVE.L  D5,Addr1  * comment
-                  JMP     InputE   * comment
+StartingAd        SUBI.B  #1,D4 
+                  CMP.B   #$0,D4  
+                  BEQ     EndingAd
+                  MOVE.L  D5,Addr1  
+                  JMP     InputE  
 
 ** Addr1 now contains the ending address
 ** Addr2 now contains the starting address
