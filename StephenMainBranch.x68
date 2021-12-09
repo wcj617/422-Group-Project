@@ -58,6 +58,13 @@ ALPHA   CMPI.B      #$41,D6
         SUBI.B      #$37,D6
         BRA         AddressCounting    
         RTS
+
+    * comment
+    * comment
+    * comment
+    * comment
+    * comment
+    * comment
         
 AddressCounting   ADD.B   D6,D5 
                   SUBI.B  #1,D3  
