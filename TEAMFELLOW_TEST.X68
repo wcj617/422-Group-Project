@@ -599,6 +599,18 @@ BBBB
 CCCC  
     MOVEA.W   #4,A4   
 
+****---------13. BEQ PASS ---------------------
+    MOVE.W   #4,D4
+    CMP.W    #4,D4
+    BEQ      DDDD
+****---------14. BRA PASS----------------------
+DDDD
+    MOVE.W   #0,D4
+    BRA      EEEE
+
+EEEE
+    MOVE.W   #4,D4
+
 
  
 
