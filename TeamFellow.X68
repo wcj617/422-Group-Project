@@ -25,6 +25,8 @@ READ_START_ADDRS
         CLR.L       D7
         LEA         MSG_STRT_ADDR, A1
         MOVE.B      #14, D0
+
+
         TRAP        #15
         LEA         INPUT_HEX,A1            * Temp hold starting address
         MOVE.B      #2,D0                   * Read string from keyboard and store at A1
@@ -278,7 +280,7 @@ OPCODE_JMPTABLES
     RTS
     JSR     OPCODE0101                           * - ADDQ ----------------------------------   
     RTS   
-    JSR     OPCODE0110                           * - BCC, BLE, BGT
+    JSR     OPCODE0110                           * - BCC, BLE, BGT, BRA
     RTS
     JSR     OPCODE0111                           * - MOVEQ
     RTS
@@ -2763,10 +2765,12 @@ CR        EQU       $0D
 LF        EQU       $0A
 
 * MESSAGES ---------------------------------------------------------------------------------------------
-MESSAGE_GREETING   DC.B    '       HELLO THERE, WELCOME TO AWESOME DISASSEMBLER'
+MESSAGE_GREETING   DC.B    '       HELLO THERE, WELCOME TO THE TEAM FELLOWSHIP DISASSEMBLER'
                 DC.B    CR,LF,'Note: Addressess must be in HEX'
                 DC.B    CR,LF,'Note: Addressess must be in caps'
-                DC.B    CR,LF,'    : Starting Address must be greater than 7000',CR,LF,CR,LF,CR,LF,0 
+                DC.B    CR,LF,'Note: Addressess must be even'
+                DC.B    CR,LF,'Note: Starting address cannot be greater than ending address'
+                DC.B    CR,LF,'    : Starting Address must be greater than 9000',CR,LF,CR,LF,CR,LF,0 
 MSG_STRT_ADDR     DC.W    'ENTER A STARTING ADDRESS (ON CAPS): ',0
 MSG_END_ADDR     DC.W    'ENTER A ENDING ADDRESS   (ON CAPS): ',0
 USER_OPTION    DC.B    'Press: ENTER to Continue || Q or q to Quit || R OR r to Restart',CR,LF,CR,LF,0
@@ -2777,7 +2781,7 @@ ERROR_ADDRSIZE      DC.B    'ERROR: INVALID ADDRESS SIZE',CR,LF,CR,LF,0
 ERROR_INVALIDCHAR         DC.B    'ERROR: INVALID ADDRESS CHARACTER',CR,LF,CR,LF,0
 ERROR_STRTGEND               DC.B    'ERROR: STARTING ADDRESS > ENDING ADDRESS',CR,LF,CR,LF,0
 ERROR_ODDADDR         DC.B    'ERROR: ODD ADDRESS',CR,LF,CR,LF,0
-ERROR_SADDR_POINT     DC.B    'ERROR: Invalid starting adress - must be greater than 7000',CR,LF,CR,LF,0
+ERROR_SADDR_POINT     DC.B    'ERROR: Invalid starting adress - must be greater than 9000',CR,LF,CR,LF,0
 * VARIABLES --------------------------------------------------------------------------------------------
 LINE_COUNTERS      DS.L    1 *holds line number of the instruction, up to a maximum of 25 on a screen
 BAD_DATA_  DS.L    1         * stores whether or not the current opcode is bad data, switches addr_loop to print bad data
