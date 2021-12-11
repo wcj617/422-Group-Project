@@ -910,6 +910,10 @@ OPCODE0110
     BEQ             OPCODE0110_GET_BGT               *Go to BGT OPcode
     CMP.W           #$4,D6                      *D6:0004
     BEQ             OPCODE0110_GET_BCC              *Go to BCC Opcode
+    CMP.W           #$0, D6
+    BEQ             OPCODE0110_GET_BRA
+    CMP.W           #$7, D6
+    BEQ             OPCODE0110_GET_BEQ
     ADD.B           #10, BAD_DATA_        *If none of those, then it is something we haven't decoded      
     RTS  
 OPCODE0110_GET_BLE
@@ -925,6 +929,24 @@ OPCODE0110_GET_BGT
     MOVE.B	        #'B',(A5)+			
     MOVE.B	        #'G',(A5)+			
     MOVE.B	        #'T',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+
+    BRA             OP0110_DISPMNT
+OPCODE0110_GET_BRA    
+    MOVE.B	        #'B',(A5)+			
+    MOVE.B	        #'R',(A5)+			
+    MOVE.B	        #'A',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+			
+    MOVE.B	        #' ',(A5)+
+    BRA             OP0110_DISPMNT
+OPCODE0110_GET_BEQ    
+    MOVE.B	        #'B',(A5)+			
+    MOVE.B	        #'E',(A5)+			
+    MOVE.B	        #'Q',(A5)+			
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
     MOVE.B	        #' ',(A5)+			
