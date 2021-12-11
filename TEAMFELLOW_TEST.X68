@@ -597,7 +597,20 @@ BBBB
     CMP.B    $5, D4
     BGT      CCCC
 CCCC  
-    MOVEA.W   #4,A4   
+    MOVEA.W   #4,A4
+    
+****----------13. BEQ PASS----------------------
+    MOVE.B  #4,D4
+    CMP.B   #4,D4
+    BEQ     DDDD
+
+****----------14. BRA PASS----------------------
+DDDD
+    BRA     EEEE
+    
+EEEE
+    MOVE.B   #4,D4
+    
 
 
  
@@ -667,6 +680,7 @@ JUMP2
 
 
     END    START        ; last line of source
+
 
 
 
